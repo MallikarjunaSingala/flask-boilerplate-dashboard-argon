@@ -1,0 +1,77 @@
+<section class="content">
+    <div class="row">
+        <div class="col-md-6">
+            {% if errors %}
+            <div class="alert alert-danger alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                {% for error in errors %}{{ error }}<br/>{% endfor %}
+            </div>
+            {% endif %}
+            <div class="box box-info">
+                <form action="{{ url_for('home_blueprint.new_connection') }}" method=post>
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label>Customer Name</label>
+                            <textarea name="name" value="{{ request.form['name'] }}" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Adress:</label>
+                            <textarea name="add" value="{{ request.form['add'] }}" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Mobile Number</label>
+                            <textarea name="mobile" value="{{ request.form['mobile'] }}" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Alternate Mobile Number</label>
+                            <textarea name="altmobile" value="{{ request.form['altmobile'] }}" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <textarea name="email" value="{{ request.form['email'] }}" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Discount</label>
+                            <textarea name="discount" value="{{ request.form['discount'] }}" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Installation Charges</label>
+                            <textarea name="installprice" value="{{ request.form['installprice'] }}" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="rate_plan">Rate Plan:</label>
+                            <select name="rate_plan" class="form-control">
+                                <option value=""></option>
+                                {% for plan in plans %}
+                                <option value="{{ plan[0] }}">{{ plan[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="plan_cycle">Plan Cycle:</label>
+                            <select name="plan_cycle" class="form-control">
+                                <option value=""></option>
+                                {% for cycle in cycles %}
+                                <option value="{{ cycle[0] }}">{{ cycle[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="zone">Customer Zone:</label>
+                            <select name="zone" class="form-control">
+                                <option value=""></option>
+                                {% for zone in zones %}
+                                <option value="{{ zone[0] }}">{{ zone[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="box-footer">
+                            <button type="submit" class="btn btn-info btn-md pull-right">Start Request</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>

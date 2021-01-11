@@ -91,14 +91,6 @@ var Layout = (function() {
         // Manage actions
 
         switch (action) {
-            case 'sidenav-pin':
-                pinSidenav();
-            break;
-
-            case 'sidenav-unpin':
-                unpinSidenav();
-            break;
-
             case 'search-show':
                 target = $this.data('target');
                 $('body').removeClass('g-navbar-search-show').addClass('g-navbar-search-showing');
@@ -845,7 +837,7 @@ var BarsChart = (function() {
 				labels: ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 				datasets: [{
 					label: 'Sales',
-					data: [25, 20, 30, 22, 17, 29]
+					data: [25, 20, 30, 22, 17, 59]
 				}]
 			}
 		});

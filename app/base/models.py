@@ -12,12 +12,13 @@ from app.base.util import hash_pass
 
 class User(db.Model, UserMixin):
 
-    __tablename__ = 'User'
+    __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
     username = Column(String, unique=True)
     email = Column(String, unique=True)
     password = Column(Binary)
+    department = Column(Integer)
 
     def __init__(self, **kwargs):
         for property, value in kwargs.items():

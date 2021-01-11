@@ -3,12 +3,19 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
-from flask import Flask, url_for
+from flask import Flask, url_for,request, session, g, redirect,flash
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from flask_moment import Moment
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
+from werkzeug.utils import secure_filename
+from flask_socketio import *
+# from util import *
+# from issues_model import *
 from os import path
+import datetime
+import config
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -38,4 +45,6 @@ def create_app(config):
     register_extensions(app)
     register_blueprints(app)
     configure_database(app)
+    moment = Moment(app)
+    socketio = SocketIO(app)
     return app

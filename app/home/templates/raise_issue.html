@@ -1,0 +1,146 @@
+{% extends 'layouts/base.html' %} {% block stylesheets %}{% endblock stylesheets %} {% block content %}
+<div class="header pb-6 d-flex align-items-center">
+    <!-- Mask -->
+    <span class="mask bg-gradient-default opacity-8"></span>
+</div>
+<div class="container-fluid mt--6">
+    <div class="row">
+        <div class="col-xl-8 order-xl-1">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-8">
+                            <h3 class="mb-0">Raise Complaint</h3>
+                        </div>
+                    </div>
+                </div>
+                {% if errors %}
+                <div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                    {% for error in errors %}{{ error }}<br />
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="card-body">
+                    <form action="{{ url_for('home_blueprint.raising', user_id= user_info[5]) }}" method="post">
+                        <div class="pl-lg-4">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label for="username">Effected UserName</label>
+                                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="1" name="username" value = "{{ user_info[0] }}"> {{ user_info[0] }} </textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label for="username">User Mobile</label>
+                                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="1" name="mobile" value = "{{ user_info[1] }}"> {{ user_info[1] }} </textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label for="username">User Email</label>
+                                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="1" name="email" value = "{{ user_info[2] }}"> {{ user_info[2] }} </textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label for="username">User Status</label>
+                                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="1" name="status" value = "{{ user_info[3] }}"> {{ user_info[3] }} </textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label for="username">User Zone</label>
+                                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="1" name="zone" value = "{{ user_info[4] }}"> {{ user_info[4] }} </textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label for="description">Issue Type</label>
+                                        <select class="form-control form-control-sm" name="type">
+                                            <option value=""></option>
+                                            {% for issue_type in issue_types %}
+                                            <option value="{{ issue_type[1] }}">{{ issue_type[1] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label for="description">Issue Description</label>
+                                        <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="description"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label class="form-control-label" for="priority">Priority</label>
+                                        <select class="form-control form-control-sm" name="priority">
+                                            <option value=""></option>
+                                            {% for priority in priorities %}
+                                            <option value="{{ priority[0] }}">{{ priority[1] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label class="form-control-label" for="assignee">Assignee</label>
+                                        <select class="form-control form-control-sm" name="assignee">
+                                            <option value=""></option>
+                                            {% for assignee in reps %}
+                                            <option value="{{ assignee[0] }}">{{ assignee[2] }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="form-group">
+                                        <label class="form-control-label" for="department">Department</label>
+                                        <select class="form-control form-control-sm" name="department">
+                                            <!-- <option value=""></option> -->
+                                            <!-- {% for department in departments %} -->
+                                            <option value="{{ departments[1][0] }}">{{ departments[1][1] }}</option>
+                                            <!-- {% endfor %} -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-footer">
+                                <button type="submit" class="btn btn-info btn-md pull-right">Raise Issue</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+<!-- Specific JS goes HERE -->
+{% block javascripts %}
+
+<script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+<script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+
+{% endblock javascripts %}

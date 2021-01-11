@@ -1,0 +1,260 @@
+{% extends 'layouts/base.html' %}
+{% block stylesheets %}{% endblock stylesheets %}
+{% block content %}
+<div class="header pb-6 d-flex align-items-center" >
+  <!-- Mask -->
+  <span class="mask bg-gradient-default opacity-8"></span>
+</div>
+<div class="container-fluid mt--6">
+  <div class="row">	
+    <div class="col-xl-8 order-xl-1">
+      <div class="card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col-8">
+			  	{% if issue[7] == 1 %}
+				<h3 class="mb-0">Update New Request</h3>
+			  	{% else %}
+			  	    <h3 class="mb-0">Update Complaint</h3>
+			  	{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form action="{{ url_for('home_blueprint.update_issue', issue_id=issue[0]) }}" method=post enctype="multipart/form-data">
+            <div class="pl-lg-4">
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+                      <label class="form-control-label" for="description">Description</label>
+                      <input type="text" id="input-username" class="form-control" value="{{ issue[14] }} " name="description">
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+                      <label class="form-control-label" for="description">Issue_type</label>
+	  			  	{% if issue[7] == 1 %}
+						<input type="text" id="input-username" class="form-control" value="New Request " name="issue_type" disabled>
+	  			  	{% else %}
+	  			  	    <input type="text" id="input-username" class="form-control" value="{{ issue[15] }} " name="issue_type">
+	  			  	{% endif %}
+                      
+                    </div>
+                  </div>
+                </div>
+              <div class="row">
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label class="form-control-label" for="status">Status</label>
+					<select class="form-control form-control-sm" name="status">
+						<option value=""></option>
+                        {% for status in statuses %}
+						{% if status[0]==issue[4] %}
+                        <option value="{{ status[0] }}" selected>{{ status[1] }}</option>
+						{% else %}
+						<option value="{{ status[0] }}">{{ status[1] }}</option>
+						{%endif%}
+                        {% endfor %}
+					</select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label class="form-control-label" for="assigned_to">Assigned To</label>
+					<select class="form-control form-control-sm" name="assigned_to">
+						<option value=""></option>
+                        {% for rep in reps %}
+						{% if rep[0]==issue[3] %}
+                        <option value="{{ rep[0] }}" selected>{{ rep[6] }}</option>
+						{% else %}
+						<option value="{{ rep[0] }}">{{ rep[6] }}</option>
+						{%endif%}
+                        {% endfor %}
+					</select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label class="form-control-label" for="username">UserName</label>
+					{% if issue[16] == ""  %}
+						<input type="text" id="input-username" class="form-control" value="" name="username">
+					{% else %}
+						<input type="text" id="input-username" class="form-control" value="{{ issue[16] }} " name="username" disabled>
+					{%endif%}
+                    
+                  </div>
+                </div>
+              </div>
+			  <hr>
+			  <h6 class="heading-small text-muted mb-4">Materials Used</h6>
+              <div class="pl-lg-4">
+                <div class="row">
+                  <div class="col-lg-4">
+                  	<div class="form-group">
+                    	<label class="form-control-label" for="fibercable">Fiber Cable</label>
+						<input type="number" id="input-username" class="form-control" name="fibercable">
+					  </div>
+				  	</div>
+                    <div class="col-lg-4">
+                    	<div class="form-group">
+                      	<label class="form-control-label" for="fibercable">LockWire</label>
+  						<input type="number" id="input-username" class="form-control" name="lockwire">
+  					  </div>
+  				  	</div>
+                    <div class="col-lg-4">
+                    	<div class="form-group">
+                      	<label class="form-control-label" for="fibercable">ONU</label>
+  						<input type="number" id="input-username" class="form-control" name="onu">
+  					  </div>
+  				  	</div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-4">
+                  	<div class="form-group">
+                    	<label class="form-control-label" for="fibercable">Termination Boxes</label>
+						<input type="number" id="input-username" class="form-control" name="terminationbox">
+					  </div>
+				  	</div>
+                    <div class="col-lg-4">
+                    	<div class="form-group">
+                      	<label class="form-control-label" for="fibercable">Patch Cord</label>
+  						<input type="number" id="input-username" class="form-control" name="patchcord">
+  					  </div>
+  				  	</div>
+                    <div class="col-lg-4">
+                    	<div class="form-group">
+                      	<label class="form-control-label" for="fibercable">FTTH Termination Small</label>
+  						<input type="number" id="input-username" class="form-control" name="terminationsmall">
+  					  </div>
+  				  	</div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-4">
+                  	<div class="form-group">
+                    	<label class="form-control-label" for="fibercable">FTTH Termination Large</label>
+						<input type="number" id="input-username" class="form-control" name="terminationlarge">
+					  </div>
+				  	</div>
+                    <div class="col-lg-4">
+                    	<div class="form-group">
+                      	<label class="form-control-label" for="fibercable">Splitter 1:2</label>
+  						<input type="number" id="input-username" class="form-control" name="split12">
+  					  </div>
+  				  	</div>
+                    <div class="col-lg-4">
+                    	<div class="form-group">
+                      	<label class="form-control-label" for="fibercable">Splitter 1:4</label>
+  						<input type="number" id="input-username" class="form-control" name="split14">
+  					  </div>
+  				  	</div>
+                    <div class="col-lg-4">
+                    	<div class="form-group">
+                      	<label class="form-control-label" for="fibercable">Splitter 1:8</label>
+  						<input type="number" id="input-username" class="form-control" name="split18">
+  					  </div>
+  				  	</div>
+                    <div class="col-lg-4">
+                    	<div class="form-group">
+                      	<label class="form-control-label" for="fibercable">CAT5 cable</label>
+  						<input type="number" id="input-username" class="form-control" name="cat5cable">
+  					  </div>
+  				  	</div>
+                    <div class="col-lg-4">
+                    	<div class="form-group">
+                      	<label class="form-control-label" for="fibercable">RJ45</label>
+  						<input type="number" id="input-username" class="form-control" name="rj45">
+  					  </div>
+  				  	</div>
+                </div>
+              </div>
+			 
+		  	{% if issue[7] == 1 %}
+		  <hr>
+		  <h6 class="heading-small text-muted mb-4">Documents and Bill Details</h6>
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label class="form-control-label" for="billno">BillNo</label>
+                  <input type="text" id="input-username" class="form-control" name="billno">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label class="form-control-label" for="billno">Upload Aadhar </label>
+                  <input type="file" id="image-file" class="form-control" name="aadhar">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label class="form-control-label" for="billno">Upload Photo</label>
+                  <input type="file" id="input-username" class="form-control" name="photo" onchange="Filevalidation()" >
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label class="form-control-label" for="billno">Upload CAF Form</label>
+                  <input type="file" id="input-username" class="form-control" name="caf" onchange="Filevalidation()" >
+                </div>
+              </div>
+            </div>
+		  	{% endif %}
+			  
+            </div>
+            <div class="box-footer">
+				<button type="submit" class="btn btn-outline-primary">Update Profile</button>
+            </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+</div>
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+
+  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+  <script> 
+      Filevalidation = () => { 
+          const fi = document.getElementById('file'); 
+          // Check if any file is selected. 
+          if (fi.files.length > 0) { 
+              for (const i = 0; i <= fi.files.length - 1; i++) { 
+  
+                  const fsize = fi.files.item(i).size; 
+                  const file = Math.round((fsize / 1024)); 
+                  // The size of the file. 
+                  if (file >= 4096) { 
+                      alert( 
+                        "File too Big, please select a file less than 4mb"); 
+                  } else if (file < 2048) { 
+                      alert( 
+                        "File too small, please select a file greater than 2mb"); 
+                  } else { 
+                      document.getElementById('size').innerHTML = '<b>'
+                      + file + '</b> KB'; 
+                  } 
+              } 
+          } 
+      } 
+  </script>
+  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+
+{% endblock javascripts %}

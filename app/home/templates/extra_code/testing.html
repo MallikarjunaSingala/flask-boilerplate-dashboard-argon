@@ -1,0 +1,63 @@
+{% extends 'layouts/base.html' %}
+{% block title %} Raise Issue {% endblock title %}
+{% block stylesheets %}{% endblock stylesheets %}
+{% block content %}
+<section class="content-header">
+    <h1>
+        Raise Issue
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-md-6">
+            {% if errors %}
+            <div class="alert alert-danger alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                {% for error in errors %}{{ error }}<br/>{% endfor %}
+            </div>
+            {% endif %}
+			<div class="box box-info">
+				<form action="{{ url_for('home_blueprint.raise_issue') }}" method=post>
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label>Issue Description</label>
+                            <textarea name="description" value="{{ request.form['description'] }}" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="priority">Priority:</label>
+                            <select name="priority" class="form-control">
+                                <option value=""></option>
+                                {% for priority in priorities %}
+                                <option value="{{ priority.priority_id }}">{{ priority.priority_name }}</option>
+                                {% endfor %}
+                            </select>
+
+                        </div>
+                        <div class="form-group">
+                            <label for="department">Department:</label>
+                            <select name="department" class="form-control">
+                                <option value=""></option>
+                                {% for department in departments %}
+                                <option value="{{ department.department_id }}">{{ department.department_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="box-footer">
+                            <button type="submit" class="btn btn-info btn-md pull-right">Raise Issue</button>
+                        </div>
+                    </div>
+				</form>
+			</div>
+		</div>
+	</div>
+</section>
+
+{% endblock content %}
+{% block javascripts %}
+
+  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+
+{% endblock javascripts %}
+

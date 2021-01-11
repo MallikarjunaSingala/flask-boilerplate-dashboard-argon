@@ -1,0 +1,121 @@
+{% extends 'layouts/base.html' %} {% block title %} Dashboard {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+<div class="header bg-primary pb-6">
+    <div class="container-fluid">
+        <div class="header-body">
+            <div class="row align-items-center py-4">
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container-fluid mt--6">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <!-- Card header -->
+                <div class="card-header border-0">
+                    <h3 class="mb-0">Inventory Details</h3>
+                </div>
+				<!-- Light table -->
+	            <div class="table-responsive">
+	  			  {% if products %}
+	              <table class="table align-items-center table-flush">
+	                <thead class="thead-light">
+	                  <tr>
+	                    <th scope="col" class="sort" data-sort="budget">Product ID</th>
+	                    <th scope="col" class="sort" data-sort="status">Product Name</th>
+						<th scope="col" class="sort" data-sort="status">Quantity</th>
+						<th scope="col" class="sort" data-sort="status">Avialbe Quantity</th>
+	                  </tr>
+	                </thead>
+	                <tbody class="list">
+	  				  {% for product in products %}
+	                  <tr>
+	                    <td class="budget">
+	                      {{ product[0] }}
+	                    </td>
+	                    <td class="budget">
+	                      {{ product[1] }}
+	                    </td>
+	                    <td class="budget">
+	                      {{ product[2] }}
+	                    </td><td class="budget">
+	                      {{ product[5] }}
+	                    </td>
+	                    <td class="budget">
+                              <button name="button" type="button" class="btn btn-success" value= "edit" data-toggle="modal" data-target="#edit_{{ product[0] }}" >Add</button><br>
+                              <div id="edit_{{ product[0] }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="trans_message" aria-hidden="true">
+                                  <form action="{{ url_for('home_blueprint.edit', type='product') }}" method="post" class="base_form">
+                                  <div class="modal-dialog" role="document">
+                                      <div class="modal-content">
+                                          <div class="modal-body"><input name="prod_name" placeholder="{{ product[1] }}"></div>
+                                          <div class="modal-body">
+                                              <input name="prod_quantity" placeholder="{{ product[2] }}" id="input_{{ product[0] }}" type="number">
+                                              <script>
+                                                  document.getElementById("input_{{ product[0] }}").oninput = function(){
+                                                      let all = document.getElementsByClassName("btn btn-primary");
+                                                      // for(let i=0;i<all.length;i++){
+                                                      //     all[i].disabled = true;
+                                                      // }
+                                                      const curr_qty = {{ product[2] }};
+                                                      let in_qty = parseInt(document.getElementById("input_{{ product[0] }}").value);
+
+                                                      //console.log(in_qty);
+                                                      //console.log(curr_qty);
+
+                                                      if(in_qty > curr_qty){
+                                                          //console.log("OKAYY");
+                                                          for(let i=0;i<all.length;i++){
+                                                              all[i].disabled = false;
+                                                          }
+                                                      }
+                                                  };
+                                              </script>
+                                              <text class="font-weight-light">(Add new count)</text>
+                                          </div>
+                                          <div class="modal-footer">
+                                              <input name="prod_id" value="{{ product[0] }}" hidden aria-hidden="true">
+                                              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                                  <button type="submit" class="btn btn-primary">Save changes</button>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  </form>
+                              </div>
+	                    </td>
+	                  </tr>
+	  				{% endfor %}
+	                <tr>
+	                    <form action = "{{ url_for('home_blueprint.update_inventory') }}" method = "POST">
+	                        <td></td>
+	                        <td>
+	                            <input name = "prod_name" placeholder="Product Name" required autofocus>
+	                        </td>
+	                        <td>
+	                            <input name = "prod_quantity" placeholder="Quantity" required>
+	                        </td>
+	                        <td>
+	                            <input type= "submit" class="btn btn-info btn-group-toggle" value= "submit" /><br>
+	                        </td>
+	                    </form>
+	                </tr>
+	                </tbody>
+	              </table>
+	              {% endif %}
+	            </div>
+            </div>
+        </div>
+    </div>
+</div>
+    {% endblock content %}
+
+    <!-- Specific JS goes HERE -->
+    {% block javascripts %}
+
+    <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+    <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+
+    {% endblock javascripts %}
+</div>

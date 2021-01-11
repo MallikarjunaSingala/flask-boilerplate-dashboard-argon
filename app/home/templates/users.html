@@ -1,0 +1,137 @@
+{% extends 'layouts/base.html' %} {% block title %} Dashboard {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+<div class="header bg-primary pb-6">
+    <div class="container-fluid">
+        <div class="header-body">
+            <div class="row align-items-center py-4">
+				<form method="post" action="">
+					<div class="input-group">
+						<div class="form-group">
+							<select class="form-control" name="zone" >
+								<option value="">Select Zone</option>
+								{% for zone in zones %}
+								<option value="{{ zone[0] }}">{{ zone[1] }}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<div class="form-group">
+							<select class="form-control" name="plan_cycle">
+								<option value="">Select Plan Cycle</option>
+								{% for cycle in cycles %}
+								<option value="{{ cycle[0] }}">{{ cycle[1] }}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<div class="form-group">
+	  				    	<button type="submit" class="btn btn-outline-default">Search</button>
+						</div>
+					</div>
+				</form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container-fluid mt--6">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <!-- Card header -->
+                <div class="card-header border-0">
+                    <h3 class="mb-0">Customers</h3>
+                </div>
+				<!-- Light table -->
+	            <div class="table-responsive">
+	  			  {% if users %}
+	              <table class="table align-items-center table-flush" id = "example" class="display">
+	                <thead class="thead-light">
+	                  <tr>
+	                    <th scope="col" class="sort" data-sort="budget">UserName</th>
+	                    <th scope="col" class="sort" data-sort="status">Mobile Number</th>
+						<th scope="col" class="sort" data-sort="status">Status</th>
+						<th scope="col" class="sort" data-sort="status">Email</th>
+						<th scope="col" class="sort" data-sort="zone">Zone</th>
+						<th scope="col" class="sort" data-sort="zone">Plan_Cycle</th>
+	                    <th scope="col">Update</th>
+						<th scope="col">Generate Ledger</th>
+	                  </tr>
+	                </thead>
+	                <tbody class="list">
+	  				  {% for user in users %}
+	                  <tr>
+	                    <td class="budget">
+	                      {{ user[0] }}
+	                    </td>
+	                    <td class="budget">
+	                      {{ user[2] }}
+	                    </td>
+	                    <td class="budget">
+							{% if user[3]=='Inactive' %}
+							  Disabled
+							 {% else %}
+							 	{{ user[3] }}
+							{% endif %}
+	                    </td>
+	                    <td class="budget">
+	                      {{ user[1] }}
+	                    </td>
+	                    <td class="budget">
+	                      {{ user[5] }}
+	                    </td>
+	                    <td class="budget">
+	                      {{ user[6] }}
+	                    </td>
+	                    <td>
+	  					  <div class="d-flex align-items-center">
+	  						<a href="/update_user_profile/{{ user[4] }}" title="Update Profile">Edit Profile</a>
+	  					  </div>
+	                    </td>
+	                    <td>
+	  					  <div class="d-flex align-items-center">
+	  						<a href="/generate_ledger/{{ user[4] }}" title="Generate Ledger">Generate Ledger</a>
+	  					  </div>
+	                    </td>
+	                  </tr>
+	  				{% endfor %}
+	                </tbody>
+	              </table>
+	              {% endif %}
+	            </div>
+            </div>
+        </div>
+    </div>
+</div>
+    {% endblock content %}
+
+    <!-- Specific JS goes HERE -->
+	
+    {% block javascripts %}
+	<script>
+	$(document).ready(function() {
+	    $('#example').DataTable( {
+	        dom: 'Bfrtip',
+	        buttons: [
+	            'copyHtml5',
+	            'excelHtml5',
+	            'csvHtml5',
+	            'pdfHtml5'
+	        ]
+	    } );
+	} );
+	
+	</script>
+    <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+    <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.5/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.5/js/buttons.html5.min.js"></script>
+	
+
+    {% endblock javascripts %}
+</div>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+  <title>
+    KRP Broadband - {% block title %} Open-Source Admin Panel {% endblock %} 
+  </title>
+
+  <!-- Favicon - loaded as static -->
+  <link rel="icon" href="/static/assets/img/brand/krp.png" type="image/png">
+  <!-- Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700">
+  <!-- Icons -->
+  <link rel="stylesheet" href="/static/assets/css/pdf.css" type="text/css">
+  <link rel="stylesheet" href="/static/assets/vendor/nucleo/css/nucleo.css" type="text/css">
+  <link rel="stylesheet" href="/static/assets/vendor/@fortawesome/fontawesome-free/css/all.min.css" type="text/css">
+  <!-- Page plugins -->
+  <!-- Argon CSS -->
+  <link rel="stylesheet" href="/static/assets/css/argon.css?v=1.2.0" type="text/css">
+
+  <!-- Specific CSS goes HERE -->
+  {% block stylesheets %}{% endblock stylesheets %}
+
+</head>
+
+<body class="">
+
+  {% include "includes/sidenav.html" %}
+
+  <div class="main-content" id="panel">
+
+    {% include "includes/navigation.html" %}
+
+    {% block content %}
+	    <div class="container d-flex justify-content-center mt-50 mb-50">
+	        <div class="row">
+	            <div class="col-md-12 text-right mb-3">
+	                <button class="btn btn-primary" id="download"> download pdf</button>
+	            </div>
+	            <div class="col-md-12">
+	                <div class="card" id="invoice">
+	                    <div class="card-header bg-transparent header-elements-inline">
+	                        <h6 class="card-title text-primary">Ledger</h6>
+	                    </div>
+	                    <div class="card-body">
+	                        <div class="row">
+	                            <div class="col-sm-6">
+	                                <div class="mb-4 pull-left">
+	                                    <ul class="list list-unstyled mb-0 text-left">
+											<li><h2>KRP Communications</h2></li>
+	                                        <li>S No:113A, Sai's Anandam Complex, </li>
+	                                        <li>TTD Road, Nandyal, 518501</li>
+	                                        <li>9963239561, krpbroadband@gmail.com </li>
+	                                    </ul>
+	                                </div>
+	                            </div>
+	                            <div class="col-sm-6">
+	                                <div class="mb-4 ">
+	                                    <div class="text-sm-right">
+	                                        <ul class="list list-unstyled mb-0">
+	                                            <li>Date Time: <span class="font-weight-semibold" id="datetime"></span>
+													<script>var dt = new Date();
+	document.getElementById("datetime").innerHTML=dt.toLocaleString();</script>
+													</span></li>
+	                                        </ul>
+	                                    </div>
+	                                </div>
+	                            </div>
+		                        <div class="d-md-flex flex-md-wrap">
+		                            <div class="mb-4 mb-md-2 text-left"> <span class="text-muted">Invoice To:</span>
+		                                <ul class="list list-unstyled mb-0">
+		                                    <li>
+		                                        <h4 class="my-2">{{ invoice_details[0][3] }}</h4>
+		                                    </li>
+		                                    <li><span class="font-weight-semibold">{{ invoice_details[0][4] }}</span></li>
+											<li><span class="font-weight-semibold">{{ invoice_details[0][0] }}</span></li>
+		                                </ul>
+		                            </div>
+								</div>
+	                        </div>
+	                    </div>
+	                    <div class="table-responsive">
+	                        <table class="table table-lg">
+	                            <thead>
+	                                <tr>
+	                                    <th>Time</th>
+	                                    <th>Amount</th>
+	                                </tr>
+	                            </thead>
+	                            <tbody>
+									{% for invoices in invoice_details %}
+	                                <tr>
+	                                    <td>{{ invoices[2] }}</td>
+										<td>₹{{ invoices[1] }}</td>
+	                                </tr>
+									{% endfor %}
+	                                <tr>
+	                                    <td>Total Amount:</td>
+										<td>₹{{ total[0][0] }}</td>
+	                                </tr>
+	                            </tbody>
+	                        </table>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	{% endblock content %}
+
+  </div>
+
+  {% include "includes/scripts.html" %}
+
+  <!-- Specific JS goes HERE --> 
+  {% block javascripts %}
+
+  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+  <!-- <script src="/static/assets/js/pdf.js"></script>
+   -->
+	<script>
+		window.onload = function () {
+		    myFunction("{{ invoice_details[4] }}");
+		};
+		function myFunction(name2){
+		document.getElementById("download")
+		    .addEventListener("click", () => {
+		        const invoice = this.document.getElementById("invoice");
+		        console.log(invoice);
+		        console.log(window);
+		
+		        var opt = {
+		            margin: 1,
+		            filename: name2+'ledger.pdf',
+		            image: { type: 'jpeg', quality: 0.98 },
+		            html2canvas: { scale: 2 },
+		            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+		        };
+		        html2pdf().from(invoice).set(opt).save();
+		    })
+			}
+	</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
+  <script src="/static/assets/js/argon.js?v=1.2.0"></script>
+  {% endblock javascripts %}
+
+
+</body>
+
+</html>

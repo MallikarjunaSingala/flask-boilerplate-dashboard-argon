@@ -1,0 +1,215 @@
+{% extends 'layouts/base.html' %}
+{% block stylesheets %}{% endblock stylesheets %}
+{% block content %}
+<div class="header pb-6 d-flex align-items-center" >
+  <!-- Mask -->
+  <span class="mask bg-gradient-default opacity-8"></span>
+</div>
+<div class="container-fluid mt--6">
+  <div class="row">	
+    <div class="col-xl-8 order-xl-1">
+      <div class="card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col-8">
+              <h3 class="mb-0">Edit Profile || {{ user[7] }}  </h3>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form action="{{ url_for('home_blueprint.update_user_profile', user_id=user[0]) }}" method=post>
+            <h6 class="heading-small text-muted mb-4">User information</h6>
+            <div class="pl-lg-4">
+              <div class="row">
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label class="form-control-label" for="name">Customer Name</label>
+                    <input type="text" id="input-username" class="form-control" value="{{ user[7] }}" name="name" disabled>
+                  </div>
+                </div>
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label class="form-control-label" for="email">Email address</label>
+                    <input type="email" name = "email" id="input-email" class="form-control" value="{{ user[2] }}" disabled>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label class="form-control-label" for="name">User Name</label>
+                    <input type="text" id="input-username" class="form-control" value="{{ user[1] }}" name="name" disabled>
+                  </div>
+                </div>
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label class="form-control-label" for="status">Status</label>
+                    <select name="status" class="form-control form-control-sm">
+						<option value=""></option>
+						{% if user[4] == "Active" %}
+                         <option value="Active" selected>Active</option>
+						 <option value="Inactive">Inactive</option>
+						{% else %}
+						  {% if user[4] == "Inactive" %}
+						 	<option value="Inactive" selected>Inactive</option>
+							<option value="Active">Active</option>
+						  {% else %}
+						  <option value="Active">Active</option>
+						  <option value="Inactive">Inactive</option>
+						  {% endif %}
+						{% endif %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <hr class="my-4" />
+            <!-- Address -->
+            <h6 class="heading-small text-muted mb-4">Contact information</h6>
+            <div class="pl-lg-4">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label class="form-control-label" for="add">Address</label>
+                    <input id="input-address" class="form-control" type="text" name = "add" value="{{user[5]}}">
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label class="form-control-label" for="mobile">Mobile Number</label>
+                    <input type="text" id="input-city" class="form-control" name = "mobile" value="{{user[3]}}">
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label class="form-control-label" for="altmobile">Alternate Mobile Number</label>
+                    <input type="text" id="input-country" class="form-control" name = "altmobile" value="{{user[8]}}">
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label class="form-control-label" for="zone">Zone</label>
+					<select class="form-control form-control-sm" name="zone">
+						<option value=""></option>
+                        {% for zone in zones %}
+						{% if zone[0]==user[6] %}
+                        <option value="{{ zone[0] }}" selected>{{ zone[1] }}</option>
+						{% else %}
+						<option value="{{ zone[0] }}">{{ zone[1] }}</option>
+						{%endif%}
+                        {% endfor %}
+					</select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <hr class="my-4" />
+            <!-- Description -->
+            <h6 class="heading-small text-muted mb-4">Connection Details</h6>
+            <div class="pl-lg-4">
+                <div class="row">
+	                <div class="col-lg-4">
+	                  <div class="form-group">
+	                    <label class="form-control-label" for="plan">Rate Plan</label>
+						<select class="form-control form-control-sm" name="plan">
+							<option value=""></option>
+	                        {% for plan in plans %}
+							{% if plan[0]==user[9] %}
+                            <option value="{{ plan[0] }}" selected>{{ plan[1] }}</option>
+							{% else %}
+							<option value="{{ plan[0] }}">{{ plan[1] }}</option>
+							{%endif%}
+	                        {% endfor %}
+						</select>
+	                  </div>
+	                </div>
+	                <div class="col-lg-4">
+	                  <div class="form-group">
+	                    <label class="form-control-label" for="cycle">Plan Cycle</label>
+						<select class="form-control form-control-sm" name="cycle">
+							<option value=""></option>
+	                        {% for cycle in cycles %}
+							{% if cycle[0]==user[10] %}
+                            <option value="{{ cycle[0] }}" selected>{{ cycle[1] }}</option>
+							{% else %}
+							<option value="{{ cycle[0] }}">{{ cycle[1] }}</option>
+							{%endif%}
+	                        {% endfor %}
+						</select>
+	                  </div>
+	                </div>
+	                <div class="col-lg-4">
+	                  <div class="form-group">
+	                    <label class="form-control-label" for="final_amount">Amount</label>
+						<input type="text" id="input-country" class="form-control" name = "final_amount" value="{{user[15]}}">
+	                  </div>
+	                </div>
+				</div>
+                <div class="row">
+	                <div class="col-lg-4">
+	                  <div class="form-group">
+	                    <label class="form-control-label" for="account">Account Status</label>
+	                    <select name="account" class="form-control form-control-sm">
+							<option value=""></option>
+							{% if user[14] == "Active" %}
+	                         <option value="Active" selected>Active</option>
+							 <option value="InActive">Inactive</option>
+							{% else %}
+							  {% if user[14] == "Inactive" %}
+							 	<option value="InActive" selected>Inactive</option>
+								<option value="Active">Active</option>
+							  {% else %}
+							  <option value="Active">Active</option>
+							  <option value="InActive">Inactive</option>
+							  {% endif %}
+							{% endif %}
+	                    </select>
+	                  </div>
+	                </div>
+	                <div class="col-lg-4">
+	                  <div class="form-group">
+	                    <label class="form-control-label" for="sub">Subscription Status</label>
+	                    <select name="sub" class="form-control form-control-sm">
+							<option value=""></option>
+							{% if user[13] == "Active" %}
+	                         <option value="Active" selected>Active</option>
+							 <option value="InActive">Inactive</option>
+							{% else %}
+							  {% if user[13] == "Inactive" %}
+							 	<option value="InActive" selected>Inactive</option>
+								<option value="Active">Active</option>
+							  {% else %}
+							  <option value="Active">Active</option>
+							  <option value="InActive">Inactive</option>
+							  {% endif %}
+							{% endif %}
+	                    </select>
+	                  </div>
+	                </div>
+				</div>
+			</div>
+			<hr class="my-4" />
+            <div class="box-footer">
+				<button type="submit" class="btn btn-outline-primary">Update Profile</button>
+            </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+</div>
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+
+  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+
+{% endblock javascripts %}

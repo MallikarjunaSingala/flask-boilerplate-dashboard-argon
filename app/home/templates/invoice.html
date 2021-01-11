@@ -1,0 +1,140 @@
+{% extends 'layouts/base.html' %} {% block title %} Dashboard {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+<div class="header bg-primary pb-6">
+    <div class="container-fluid">
+        <div class="header-body">
+            <div class="row align-items-center py-4">
+				<form method="post" action="">
+					<div class="input-group">
+						<div class="input-daterange datepicker row align-items-center">
+						    <div class="col">
+						        <div class="form-group">
+						            <div class="input-group">
+						                <div class="input-group-prepend">
+						                    <span class="input-group-text"><i class="ni ni-calendar-grid-58"></i></span>
+						                </div>
+						                <input class="form-control" placeholder="Start date" type="date" name ="start_date">
+						            </div>
+						        </div>
+						    </div>
+						    <div class="col">
+						        <div class="form-group">
+						            <div class="input-group">
+						                <div class="input-group-prepend">
+						                    <span class="input-group-text"><i class="ni ni-calendar-grid-58"></i></span>
+						                </div>
+						                <input class="form-control" placeholder="End date" type="date" name = "end_date">
+						            </div>
+						        </div>
+						    </div>
+						</div>
+						<div class="form-group">
+							<select class="form-control" name="zone">
+								<option value="">Select Zone</option>
+								{% for zone in zones %}
+								<option value="{{ zone[0] }}">{{ zone[1] }}</option>
+								{% endfor %}
+							</select>
+						</div>
+	  				  <div class="form-group">
+	  				    <button type="submit" class="btn btn-outline-default" name="search_form">Search</button>
+	  				  </div>
+					</div>
+				</form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container-fluid mt--6">
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <!-- Card header -->
+                <div class="card-header border-0">
+                    <h3 class="mb-0">Invoices</h3>
+                </div>
+				<!-- Light table -->
+	            <div class="table-responsive">
+	  			  {% if users %}
+	              <table class="table align-items-center table-flush"  id = "example" class="display">
+	                <thead class="thead-light">
+	                  <tr>
+	                    <th scope="col" class="sort" data-sort="budget">UserName</th>
+	                    <th scope="col" class="sort" data-sort="due_amount">Due Amount</th>
+						<th scope="col" class="sort" data-sort="current_amount">Current_Amount</th>
+						<th scope="col" class="sort" data-sort="invoice_date">Invoice Date</th>
+						<th scope="col" class="sort" data-sort="invoice_date">Zone</th>
+	                    <th scope="col">Generate Invoice</th>
+	                  </tr>
+	                </thead>
+	                <tbody class="list">
+	  				  {% for user in users %}
+	                  <tr>
+	                    <td class="budget">
+	                      {{ user[0] }}
+	                    </td>
+	                    <td class="budget">
+	                      {{ user[3] }}
+	                    </td>
+	                    <td class="budget">
+	                      {{ user[4] }}
+	                    </td>
+	                    <td class="budget">
+	                      {{ user[5] }}
+	                    </td>
+	                    <td class="budget">
+	                      {{ user[7] }}
+	                    </td>
+	                    <td>
+	  					  <div class="d-flex align-items-center">
+			  				<!-- <form method="post" action="">
+			  	  				  <div class="form-group">
+			  	  				    <button type="submit" class="btn btn-outline-default" value = {{ user[3]}} name="invoice_form">Generate Invoice</button>
+			  	  				  </div>
+			  				</form> -->
+	  						<a href="/generate_invoice/{{ user[6] }}" title="Generate Invoice">Generate Invoice</a>
+	  					  </div>
+	                    </td>
+	                  </tr>
+	  				{% endfor %}
+	                </tbody>
+	              </table>
+	              {% endif %}
+	            </div>
+            </div>
+        </div>
+    </div>
+</div>
+    {% endblock content %}
+
+    <!-- Specific JS goes HERE -->
+    {% block javascripts %}
+	<script>
+	$(document).ready(function() {
+	    $('#example').DataTable( {
+	        dom: 'Bfrtip',
+	        buttons: [
+	            'copyHtml5',
+	            'excelHtml5',
+	            'csvHtml5',
+	            'pdfHtml5'
+	        ]
+	    } );
+	} );
+	</script>
+
+  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+  <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/1.6.5/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+  <script src="https://cdn.datatables.net/buttons/1.6.5/js/buttons.html5.min.js"></script>
+
+
+    {% endblock javascripts %}
+</div>

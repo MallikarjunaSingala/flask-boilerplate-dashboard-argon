@@ -1,0 +1,68 @@
+{% extends 'layouts/base.html' %}
+{% block stylesheets %}{% endblock stylesheets %}
+{% block content %}
+<section class="content-header">
+    <h1>
+        Dashboard
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Issues</h3>
+                </div>
+                <div class="box-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Raised By</th>
+                                    <th>Raised On</th>
+                                    <th>Status</th>
+                                    <th>Actions 1</th>
+									<th>Actions 2</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for issue in issues %}
+                                    {% if issue['status_name'] == 'Open' %}
+                                        <tr style="color: red;">
+                                    {% elif issue['status_name'] == 'In-Progress' %}
+                                        <tr style="color: orange;">
+                                    {% elif issue['status_name'] == 'Closed' %}
+                                        <tr style="color: green;">
+                                    {% else %}
+                                        <tr>
+                                    {% endif %}
+                                        <td>{{ issue['description'] }}</td>
+                                        <td>{{ issue['raised_by'] }}</td>
+                                        <td>{{ issue['created'] }}</td>
+                                        <td>{{ issue['status_name'] }}</td>
+                                        <td>
+                                            <a href="/issues/update/{{ issue['issue_id'] }}" title="Update Issue">Update</a>
+                                        </td>
+                                        <td>
+                                            <a href="/issues/details/{{ issue['issue_id'] }}" title="Details">Details</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+
+  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+
+{% endblock javascripts %}
+
+

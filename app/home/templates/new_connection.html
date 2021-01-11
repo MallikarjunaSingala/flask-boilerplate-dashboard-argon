@@ -1,0 +1,150 @@
+{% extends 'layouts/base.html' %}
+{% block stylesheets %}{% endblock stylesheets %}
+{% block content %}
+<div class="header pb-6 d-flex align-items-center" >
+  <!-- Mask -->
+  <span class="mask bg-gradient-default opacity-8"></span>
+</div>
+<div class="container-fluid mt--6">
+  <div class="row">	
+    <div class="col-xl-8 order-xl-1">
+      <div class="card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col-8">
+              <h3 class="mb-0">Add Connection </h3>
+            </div>
+          </div>
+        </div>
+        {% if errors %}
+        <div class="alert alert-danger alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            <h4><i class="icon fa fa-ban"></i> Error!</h4>
+            {% for error in errors %}{{ error }}<br/>{% endfor %}
+        </div>
+        {% endif %}
+        <div class="card-body">
+          <form action="{{ url_for('home_blueprint.new_connection') }}" method=post>
+            <h6 class="heading-small text-muted mb-4">User information</h6>
+            <div class="pl-lg-4">
+              <div class="row">
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label class="form-control-label" for="name">Customer Name</label>
+                    <input type="text" id="input-username" class="form-control" placeholder="Username" value="{{ request.form['name'] }}" name="name">
+                  </div>
+                </div>
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label class="form-control-label" for="email">Email address</label>
+                    <input type="email" name = "email" id="input-email" class="form-control" placeholder="Email">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <hr class="my-4" />
+            <!-- Address -->
+            <h6 class="heading-small text-muted mb-4">Contact information</h6>
+            <div class="pl-lg-4">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="form-group">
+                    <label class="form-control-label" for="address">Address</label>
+                    <input id="input-address" class="form-control" placeholder="Home Address" type="text" name = "add" >
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label class="form-control-label" for="mobile">Mobile Number</label>
+                    <input type="text" id="input-city" class="form-control" placeholder="Mobile" name = "mobile">
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label class="form-control-label" for="altmobile">Alternate Mobile Number</label>
+                    <input type="text" id="input-country" class="form-control" placeholder="Alternative Mobile" name = "altmobile">
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label class="form-control-label" for="zone">Zone</label>
+					<select class="form-control form-control-sm" name="zone" required>
+						<option value=""></option>
+                        {% for zone in zones %}
+                        <option value="{{ zone[0] }}">{{ zone[1] }}</option>
+                        {% endfor %}
+					</select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <hr class="my-4" />
+            <!-- Description -->
+            <h6 class="heading-small text-muted mb-4">Connection Details</h6>
+            <div class="pl-lg-4">
+                <div class="row">
+                	<div class="col-lg-4">
+              			<div class="form-group">
+							<label class="form-control-label" for="discount">Discount</label>
+							<input id="input-address" class="form-control" placeholder="Discount %" type="number" name = "discount" required>
+						</div>
+					</div>
+                	<div class="col-lg-4">
+              			<div class="form-group">
+							<label class="form-control-label" for="installprice">Installation Charges</label>
+							<input id="input-address" class="form-control" placeholder="Installation Charges %" type="number" name = "installprice" required>
+						</div>
+					</div>
+				</div>
+                <div class="row">
+	                <div class="col-lg-4">
+	                  <div class="form-group">
+	                    <label class="form-control-label" for="rate_plan">Rate Plan</label>
+						<select class="form-control form-control-sm" name="rate_plan" required>
+							<option value=""></option>
+	                        {% for plan in plans %}
+	                        <option value="{{ plan[0] }}">{{ plan[1] }}</option>
+	                        {% endfor %}
+						</select>
+	                  </div>
+	                </div>
+	                <div class="col-lg-4">
+	                  <div class="form-group">
+	                    <label class="form-control-label" for="plan_cycle">Plan Cycle</label>
+						<select class="form-control form-control-sm" name="plan_cycle" required>
+							<option value=""></option>
+	                        {% for cycle in cycles %}
+	                        <option value="{{ cycle[0] }}">{{ cycle[1] }}</option>
+	                        {% endfor %}
+						</select>
+	                  </div>
+	                </div>
+				</div>
+			</div>
+			<hr class="my-4" />
+            <div class="box-footer">
+				<button type="submit" class="btn btn-outline-primary">Start Request</button>
+            </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+</div>
+
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+
+  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+
+{% endblock javascripts %}
+

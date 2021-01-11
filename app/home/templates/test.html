@@ -1,0 +1,65 @@
+
+{% extends 'layouts/base.html' %}
+{% block stylesheets %}{% endblock stylesheets %}
+{% block content %}
+<section class="content-header">
+    <h1>
+        Update Issue
+    </h1>
+</section>
+<section class="content">
+    <div class="row">
+        <div class="col-md-6">
+            {% if errors %}
+            <div class="alert alert-danger alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                <h4><i class="icon fa fa-ban"></i> Error!</h4>
+                {% for error in errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+            <div class="box box-info">
+                <form action="{{ url_for('home_blueprint.payment_add', user_id=user[0]) }}" method=post>
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label for="user_name">User Name:</label>
+                            <select name="user_name" class="form-control" disabled>
+                                <option value=""></option>
+								<option value="{{ user[0] }}" selected>{{ user[0]}}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="due_amount">Due Amount:</label>
+                            <select name="due_amount" class="form-control" disabled>
+                                <option value=""></option>
+                                        <option value="{{ user[1] }}" selected>{{ user[1] }}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="amount">Amount:</label>
+                            <select name="amount" class="form-control">
+                                <option value=""></option>
+                                        <option value="{{ user[1] }}" selected>{{ user[1]}}</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>BillNo:</label>
+                            <textarea name="billno" value="{{ request.form['billno'] }}" class="form-control"></textarea>
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-info btn-md pull-right">Update Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+
+  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+
+{% endblock javascripts %}

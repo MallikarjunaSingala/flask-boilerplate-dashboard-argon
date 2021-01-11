@@ -1,0 +1,47 @@
+{% block header %}
+<header class="main-header">
+    <a href="{{ url_for('dashboard') }}" class="logo">
+        <span class="logo-mini"> <b>t</b>
+        </span>
+        <span class="logo-lg"> <b>t</b>rckr
+        </span>
+    </a>
+    <nav class="navbar navbar-static-top">
+        <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+            <span class="sr-only">Toggle navigation</span>
+        </a>
+
+        <div class="navbar-custom-menu">
+            <ul class="nav navbar-nav">
+                <li class="dropdown notifications-menu">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-bell-o"></i>
+                    </a>
+                </li>
+                <li class="dropdown user user-menu">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <img src="{{ url_for('static', filename='img/avatar.png')}}" class="user-image" alt="User Image">
+                        <span class="hidden-xs">{{ g.user['forename'] +' '+ g.user['surname'] }}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <!-- User image -->
+                        <li class="user-header">
+                            <img src="{{ url_for('static', filename='img/avatar.png')}}"g" class="img-circle" alt="User Image">
+
+                            <p>
+                                {{ g.user['forename'] +' '+ g.user['surname'] }}
+                                <small>Member since Nov. 2016</small>
+                            </p>
+                        </li>
+                        <li class="user-footer">
+                            <div class="pull-left">
+                                <a href="{{ url_for('logout') }}" class="btn btn-primary btn-flat">Sign out</a>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</header>
+{% endblock %}

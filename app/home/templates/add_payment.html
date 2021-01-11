@@ -1,0 +1,123 @@
+{% extends 'layouts/base.html' %}
+{% block stylesheets %}{% endblock stylesheets %}
+{% block content %}
+<div class="header pb-6 d-flex align-items-center" >
+  <!-- Mask -->
+  <span class="mask bg-gradient-default opacity-8"></span>
+</div>
+<div class="container-fluid mt--6">
+  <div class="row">
+    <div class="col-xl-8 order-xl-1">
+      <div class="card">
+        <div class="card-header">
+          <div class="row align-items-center">
+            <div class="col-8">
+				<h3 class="mb-0">Update Payment for {{ user[2] }}</h3>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form action="{{ url_for('home_blueprint.payment_add', user_id=user[0]) }}" method=post>
+            <div class="pl-lg-4">
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+                      <label class="form-control-label" for="username">UserName</label>
+                      <input type="text" id="input-username" class="form-control" value="{{ user[2] }} " name="username" disabled>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+                      <label class="form-control-label" for="due_amount">Due Amount</label>
+                      <input type="text" id="input-username" class="form-control" value="{{ user[1] }}" name="due_amount" readonly>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+                      <label class="form-control-label" for="due_amount">Paid Amount</label>
+                      <input type="text" id="input-username" class="form-control" value="{{ user[1] }}" name="paid_amount" readonly>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+                      <label class="form-control-label" for="due_amount">Due Date</label>
+                      <input type="text" id="input-username" class="form-control" value="{{ user[3] }}" name="due_date" disabled>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+                      <label class="form-control-label" for="due_amount">Total Intervals missed</label>
+                      <input type="text" id="input-username" class="form-control" value="{{ user[4] }}" name="intervals" disabled>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+                      <label class="form-control-label" for="due_amount">Customer Name</label>
+                      <input type="text" id="input-username" class="form-control" value="{{ user[7] }}" name="custname" disabled>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+                      <label class="form-control-label" for="due_amount">Address</label>
+                      <input type="text" id="input-username" class="form-control" value="{{ user[8] }}" name="add" disabled>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+                      <label class="form-control-label" for="billno">Bill No</label>
+                      <input type="text" id="input-username" class="form-control" name="billno" required >
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="form-group">
+	                    <label class="form-control-label" for="zone">Payment Mode</label>
+						<select class="form-control form-control-sm" name="mode">
+							<option value="" selected></option>
+	                        {% for mode in modes %}
+	                        <option value="{{ mode[1] }}">{{ mode[1] }}</option>
+	                        {% endfor %}
+						</select>
+                      <!-- <label class="form-control-label" for="billno">Payment Mode</label>
+                      <input type="text" id="input-username" class="form-control" name="billno" required > -->
+                    </div>
+                  </div>
+                </div>
+            </div>
+            <div class="box-footer">
+				<button type="submit" class="btn btn-outline-primary">Update Payment</button>
+            </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+</div>
+{% endblock content %}
+
+<!-- Specific JS goes HERE -->
+{% block javascripts %}
+
+  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+
+{% endblock javascripts %}

@@ -6,3 +6,16 @@ flask_sqlalchemy==2.*
 email_validator
 python-decouple
 gunicorn
+Flask-Moment
+click
+eventlet
+Flask-SocketIO
+greenlet
+itsdangerous
+Jinja2
+MarkupSafe
+python-engineio
+python-socketio
+six
+flask_apscheduler
+google.cloud
