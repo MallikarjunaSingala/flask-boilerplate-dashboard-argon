@@ -84,17 +84,17 @@ def index():
     pending_new_requests = db.fetchall()[0][0]
     db.execute('''
     SELECT IFNULL(SUM(amount),0),count(user_id)
-    FROM transactions WHERE strftime('%Y-%m',timestamp) = strftime('%Y-%m','now')
+    FROM transactions WHERE date_format(timestamp,'%Y-%m') = date_format(now(),'%Y-%m')
     ''')
     collection = db.fetchall()[0]
     db.execute('''
     SELECT IFNULL(SUM(amount),0),count(user_id)
-    FROM transactions WHERE strftime('%Y-%m-%d',timestamp) = strftime('%Y-%m-%d','now')
+    FROM transactions WHERE date_format(timestamp,'%Y-%m-%d') = date_format(now(),'%Y-%m-%d')
     ''')
     today_collection = db.fetchall()[0]
     db.execute('''
     SELECT IFNULL(SUM(amount),0),count(user_id)
-    FROM transactions WHERE strftime('%Y-%m-%d',timestamp) = strftime('%Y-%m-%d',datetime('now','-1 day'))
+    FROM transactions WHERE DATE(timestamp) = DATE(NOW() - INTERVAL 1 DAY)
     ''')
     yesterday_collection = db.fetchall()[0]
     
@@ -127,8 +127,8 @@ def index():
     for d in data:
       lables.append(d[0])
       values.append(d[1])
-    db.execute('''select strftime("%d-%m-%Y",timestamp),sum(amount) from transactions
-      WHERE strftime("%m-%Y",timestamp) = strftime("%m-%Y",date('now'))  group by 1 order by 1''')
+    db.execute('''select DATE(timestamp),sum(amount) from transactions
+      WHERE DATE(timestamp) = DATE(now())  group by 1 order by 1''')
     data = db.fetchall()
     values2 = []
     lables2 = []
@@ -136,7 +136,7 @@ def index():
       lables2.append(d[0])
       values2.append(d[1])
     db.execute(''' SELECT
-  (CASE Strftime('%m', timestamp)
+  (CASE MONTH(timestamp)
            WHEN '01' THEN 'Jan'
            WHEN '02' THEN 'Feb'
            WHEN '03' THEN 'Mar'
@@ -150,7 +150,7 @@ def index():
            WHEN '11' THEN 'Nov'
            WHEN '12' THEN 'Dec'
            ELSE ''
-         END) || '-' || Strftime('%Y', timestamp)
+         END) || '-' || YEAR(timestamp)
     ,
        Sum(amount)
 FROM   transactions
@@ -163,7 +163,7 @@ ORDER  BY 1  ''')
       lables3.append(d[0])
       values3.append(d[1])
     db.execute('''select salesman,sum(amount) from transactions
-      WHERE strftime("%m-%Y",timestamp) = strftime("%m-%Y",date('now'))  group by 1 order by 1''')
+      WHERE EXTRACT(YEAR_MONTH FROM timestamp) = EXTRACT(YEAR_MONTH FROM now())  group by 1 order by 1''')
     data = db.fetchall()
     values4 = []
     lables4 = []
@@ -1156,9 +1156,7 @@ def update_user_profile(user_id):
 @login_required
 def payment():
   if current_user.department != 2:
-    issues = None
     conn = mysql.connector.connect(**config)
-    conn.row_factory = sql.Row
     db = conn.cursor()
     db.execute('''select * from zones''')
     zones = db.fetchall()
@@ -1172,10 +1170,12 @@ def payment():
          user.id as user_id,
          due_start_date,
          user.zone
-                              FROM balance_info LEFT JOIN User_data user ON user_id = id WHERE due_amount > 0
-                              and customer_status = 'Active'
-                              order by due_amount desc
-                              ''')
+    FROM balance_info
+    LEFT JOIN User_data user ON user_id = id
+    WHERE due_amount > 0
+    and customer_status = 'Active'
+    order by due_amount desc
+    ''')
     output = db.fetchall()
     if request.method == "POST":
         zone = request.form['zone']
@@ -1572,7 +1572,7 @@ def edit():
 
         return redirect(url_for('home_blueprint.update_inventory'))
     conn.close()
-    return render(url_for(home_blueprint.update_inventory))
+    return redirect(url_for('home_blueprint.update_inventory'))
 
 @blueprint.route('/<template>')
 @login_required

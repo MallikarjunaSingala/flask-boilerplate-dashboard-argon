@@ -19,3 +19,4 @@ python-socketio
 six
 flask_apscheduler
 google.cloud
+pymysql
