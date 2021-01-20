@@ -66,7 +66,7 @@ def scheduledTask():
     info = db.execute('''SELECT
          user.id,plan_cycle, rate_plan, next_invoice_date, balance_info.due_amount AS due_amount,discount_amount,
          pending_intervals,invoices.id
-          FROM user JOIN invoices
+          FROM User_data user JOIN invoices
            ON user.id = invoices.user_id
           JOIN balance_info ON balance_info.user_id = user.id
           WHERE status = "Active" and invoices.next_invoice_date > last_success_date

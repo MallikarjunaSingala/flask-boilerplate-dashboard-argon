@@ -18,7 +18,18 @@ import datetime
 from dateutil.relativedelta import *
 
 import requests
+import mysql.connector
+from mysql.connector.constants import ClientFlag
+import json
+import datetime
+from dateutil import rrule
 
+config = {
+    'user': 'krpcommu_admin',
+    'password': 'Vikram@123',
+    'host': '172.105.56.108',
+    'database': 'krpcommu_fibernet'
+}
 url = "https://www.smsgatewayhub.com/api/mt/SendSMS"
 apikey = "zlK4AxVdjEW230uUT6FVaQ"
 senderid = "SMSTST"
@@ -50,74 +61,81 @@ def calculate_periods(plan_cycle,last_date):
 @blueprint.route('/index')
 @login_required
 def index():
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
-    pending_payments = db.execute('''
-        SELECT SUM(due_amount),COUNT(*) FROM balance_info LEFT JOIN user ON user_id = id WHERE due_amount > 0
+    db.execute('''
+        SELECT SUM(due_amount),COUNT(*) FROM balance_info LEFT JOIN User_data user ON user_id = id WHERE due_amount > 0
         AND status = 'Active'
-        ''').fetchall()[0]
-
-    pending_issues = db.execute('''
+        ''')
+    pending_payments = db.fetchall()[0]
+    db.execute('''
     SELECT COUNT(*)
     FROM issues LEFT JOIN issue_status ON status = issue_status_id
     WHERE issue_type_id <> 1
     and issues.status < 3
-    ''').fetchall()[0][0]
-
-    pending_new_requests = db.execute('''
+    ''')
+    pending_issues = db.fetchall()[0][0]
+    db.execute('''
     SELECT COUNT(*)
     FROM issues LEFT JOIN issue_status ON status = issue_status_id
     WHERE issue_type_id = 1
     and issues.status < 3
-    ''').fetchall()[0][0]
-
-    collection = db.execute('''
+    ''')
+    pending_new_requests = db.fetchall()[0][0]
+    db.execute('''
     SELECT IFNULL(SUM(amount),0),count(user_id)
     FROM transactions WHERE strftime('%Y-%m',timestamp) = strftime('%Y-%m','now')
-    ''').fetchall()[0]
-
-    today_collection = db.execute('''
+    ''')
+    collection = db.fetchall()[0]
+    db.execute('''
     SELECT IFNULL(SUM(amount),0),count(user_id)
     FROM transactions WHERE strftime('%Y-%m-%d',timestamp) = strftime('%Y-%m-%d','now')
-    ''').fetchall()[0]
-    yesterday_collection = db.execute('''
+    ''')
+    today_collection = db.fetchall()[0]
+    db.execute('''
     SELECT IFNULL(SUM(amount),0),count(user_id)
     FROM transactions WHERE strftime('%Y-%m-%d',timestamp) = strftime('%Y-%m-%d',datetime('now','-1 day'))
-    ''').fetchall()[0]
-
-    total_collection = db.execute('''
+    ''')
+    yesterday_collection = db.fetchall()[0]
+    
+    db.execute('''
     SELECT IFNULL(SUM(amount),0),count(user_id)
     FROM transactions
-    ''').fetchall()[0]
-
-    total_connections = db.execute('''
+    ''')
+    total_collection = db.fetchall()[0]
+    
+    db.execute('''
     SELECT COUNT(*)
-    FROM user WHERE status = 'Active'
-    ''').fetchall()[0][0]
-
-    free_connections = db.execute('''
+    FROM User_data WHERE status = 'Active'
+    ''')
+    total_connections = db.fetchall()[0][0]
+    
+    db.execute('''
     SELECT COUNT(*)
-    FROM user WHERE plan_cycle = '5'
+    FROM User_data user WHERE plan_cycle = '5'
     AND status = 'Active'
-    ''').fetchall()[0][0]
-
-    recent_inactives = db.execute('''SELECT count(*) from recent_inactives WHERE updated_portal = 0''').fetchall()[0][0]
-    unsettled = db.execute('''SELECT IFNULL(SUM(due_amount),0) from unsettled_balance WHERE due_amount > 0''').fetchall()[0][0]
-    data = db.execute('''select p.name,count(*) from plan_cycles p join user on p.id = user.plan_cycle group by 1 order by 2''').fetchall()
+    ''')
+    free_connections = db.fetchall()[0][0]
+    db.execute('''SELECT count(*) from recent_inactives WHERE updated_portal = 0''')
+    recent_inactives = db.fetchall()[0][0]
+    db.execute('''SELECT IFNULL(SUM(due_amount),0) from unsettled_balance WHERE due_amount > 0''')
+    unsettled = db.fetchall()[0][0]
+    db.execute('''select p.name,count(*) from plan_cycles p JOIN User_data user on p.id = user.plan_cycle group by 1 order by 2''')
+    data = db.fetchall()
     values = []
     lables = []
     for d in data:
       lables.append(d[0])
       values.append(d[1])
-    data = db.execute('''select strftime("%d-%m-%Y",timestamp),sum(amount) from transactions
-      WHERE strftime("%m-%Y",timestamp) = strftime("%m-%Y",date('now'))  group by 1 order by 1''').fetchall()
+    db.execute('''select strftime("%d-%m-%Y",timestamp),sum(amount) from transactions
+      WHERE strftime("%m-%Y",timestamp) = strftime("%m-%Y",date('now'))  group by 1 order by 1''')
+    data = db.fetchall()
     values2 = []
     lables2 = []
     for d in data:
       lables2.append(d[0])
       values2.append(d[1])
-    data = db.execute(''' SELECT
-
+    db.execute(''' SELECT
   (CASE Strftime('%m', timestamp)
            WHEN '01' THEN 'Jan'
            WHEN '02' THEN 'Feb'
@@ -137,14 +155,16 @@ def index():
        Sum(amount)
 FROM   transactions
 GROUP  BY 1
-ORDER  BY 1  ''').fetchall()
+ORDER  BY 1  ''')
+    data = db.fetchall()
     values3 = []
     lables3 = []
     for d in data:
       lables3.append(d[0])
       values3.append(d[1])
-    data = db.execute('''select salesman,sum(amount) from transactions
-      WHERE strftime("%m-%Y",timestamp) = strftime("%m-%Y",date('now'))  group by 1 order by 1''').fetchall()
+    db.execute('''select salesman,sum(amount) from transactions
+      WHERE strftime("%m-%Y",timestamp) = strftime("%m-%Y",date('now'))  group by 1 order by 1''')
+    data = db.fetchall()
     values4 = []
     lables4 = []
     for d in data:
@@ -170,51 +190,58 @@ ORDER  BY 1  ''').fetchall()
 @login_required
 def users():
     if current_user.department == 3 or current_user.department == 4:
-        conn = sql.connect('db.sqlite3')
+        conn = mysql.connector.connect(**config)
         db = conn.cursor()
         zone=''
         plan_cycle=''
-        customers = db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name
-         FROM user LEFT JOIN zones ON user.zone = zones.id
+        db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name
+         FROM User_data user LEFT JOIN zones ON user.zone = zones.id
          LEFT JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
          ORDER BY status
-         ''').fetchall()
-        zones = db.execute('''SELECT * FROM zones''').fetchall()
-        cycles = db.execute('''SELECT * FROM plan_cycles''').fetchall()
+         ''')
+        customers = db.fetchall()
+        db.execute('''SELECT * FROM zones''')
+        zones = db.fetchall()
+        db.execute('''SELECT * FROM plan_cycles''')
+        cycles = db.fetchall()
         if request.method == "POST":
             zone = request.form['zone']
             cycle = request.form['plan_cycle']
             if(zone == '' and cycle == ''):
-                customers = db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name
-                        FROM user JOIN zones ON user.zone = zones.id
+                db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name
+                        FROM User_data user JOIN zones ON user.zone = zones.id
                         JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
                         ORDER BY status
-                        ''').fetchall()
+                        ''')
+                customers = db.fetchall()
             elif cycle == '':
                 zone = int(zone)
-                customers = db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+                db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
                 JOIN zones ON user.zone = zones.id
                 JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-                WHERE zone = ?
+                WHERE zone = %s
                 ORDER BY status
-                ''',[zone]).fetchall()
+                ''',[zone])
+                customers = db.fetchall()
             elif zone == '':
                 cycle = int(cycle)
-                customers = db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+                db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
                 JOIN zones ON user.zone = zones.id
                 JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-                WHERE plan_cycle = ?
+                WHERE plan_cycle = %s
                 ORDER BY status
-                ''',[cycle]).fetchall()
+                ''',[cycle])
+                customers = db.fetchall()
             else:
                 cycle = int(cycle)
                 zone = int(zone)
-                customers = db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+                db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
                 JOIN zones ON user.zone = zones.id
                 JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-                WHERE plan_cycle = ? and zone = ?
+                WHERE plan_cycle = %s and zone = %s
                 ORDER BY status
-                ''',[cycle,zone]).fetchall()
+                ''',[cycle,zone])
+                customers = db.fetchall()
             return render_template('users.html', users=customers,zones = zones,cycles = cycles,segment='users')
         conn.close()
         return render_template('users.html', users = customers,zones = zones,cycles = cycles,segment='users')
@@ -225,11 +252,12 @@ def users():
 @login_required
 def transactions():
     if current_user.department != 2:
-        conn = sql.connect('db.sqlite3')
+        conn = mysql.connector.connect(**config)
         db = conn.cursor()
-        transactions = db.execute('''SELECT username,user.id,amount,TIMESTAMP,salesman,billno,name,transactions.trasaction_id
-         FROM transactions LEFT JOIN user ON user.id = transactions.user_id
-         ''').fetchall()
+        db.execute('''SELECT username,user.id,amount,TIMESTAMP,salesman,billno,name,transactions.trasaction_id
+         FROM transactions LEFT JOIN User_data user ON user.id = transactions.user_id
+         ''')
+        transactions = db.fetchall()
         conn.close()
         return render_template('transactions.html', segment='transactions',transactions = transactions)
     else:
@@ -239,53 +267,60 @@ def transactions():
 @login_required
 def inactives():
     if current_user.department == 3 or current_user.department == 4:
-      conn = sql.connect('db.sqlite3')
+      conn = mysql.connector.connect(**config)
       db = conn.cursor()
-      customers = db.execute('''SELECT user.username,email,mobile,status,user.id,zones.name,plan_cycles.name
-       FROM user JOIN zones ON user.zone = zones.id
+      db.execute('''SELECT user.username,email,mobile,status,user.id,zones.name,plan_cycles.name
+       FROM User_data user JOIN zones ON user.zone = zones.id
        JOIN recent_inactives ON user.id = recent_inactives.user_id
        JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
        WHERE updated_portal = 0
-       ''').fetchall()
-      zones = db.execute('''SELECT * FROM zones''').fetchall()
-      cycles = db.execute('''SELECT * FROM plan_cycles''').fetchall()
+       ''')
+      customers = db.fetchall()
+      db.execute('''SELECT * FROM zones''')
+      zones = db.fetchall()
+      db.execute('''SELECT * FROM plan_cycles''')
+      cycles = db.fetchall()
       if request.method == "POST":
           zone = request.form['zone']
           cycle = request.form['plan_cycle']
           if(zone == '' and cycle == ''):
-              customers = db.execute('''SELECT user.username,email,mobile,status,user.id,zones.name,plan_cycles.name
-                      FROM user JOIN zones ON user.zone = zones.id
+              db.execute('''SELECT user.username,email,mobile,status,user.id,zones.name,plan_cycles.name
+                      FROM User_data user JOIN zones ON user.zone = zones.id
                       JOIN recent_inactives ON user.id = recent_inactives.user_id
                       JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
                       WHERE updated_portal = 0
-                      ''').fetchall()
+                      ''')
+              customers = db.fetchall()
           elif cycle == '':
               zone = int(zone)
-              customers = db.execute('''SELECT user.username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+              db.execute('''SELECT user.username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
               JOIN zones ON user.zone = zones.id
               JOIN recent_inactives ON user.id = recent_inactives.user_id
               JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-              WHERE zone = ?
+              WHERE zone = %s
               AND updated_portal = 0
-              ''',[zone]).fetchall()
+              ''',[zone])
+              customers = db.fetchall() 
           elif zone == '':
               cycle = int(cycle)
-              customers = db.execute('''SELECT user.username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+              db.execute('''SELECT user.username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
               JOIN zones ON user.zone = zones.id
               JOIN recent_inactives ON user.id = recent_inactives.user_id
               JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-              WHERE plan_cycle = ?
+              WHERE plan_cycle = %s
               AND updated_portal = 0
-              ''',[cycle]).fetchall()
+              ''',[cycle])
+              customers = db.fetchall()
           else:
               cycle = int(cycle)
               zone = int(zone)
-              customers = db.execute('''SELECT user.username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+              db.execute('''SELECT user.username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
               JOIN zones ON user.zone = zones.id
               JOIN recent_inactives ON user.id = recent_inactives.user_id
               JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-              WHERE plan_cycle = ? and zone = ? AND updated_portal = 0
-              ''',[cycle,zone]).fetchall()
+              WHERE plan_cycle = %s and zone = %s AND updated_portal = 0
+              ''',[cycle,zone])
+              customers = db.fetchall()
           return render_template('recently_inactive.html', segment='inactives',users=customers,zones = zones,cycles = cycles)
       conn.close()
       return render_template('recently_inactive.html', segment='inactives',users = customers,zones = zones,cycles = cycles)
@@ -296,15 +331,16 @@ def inactives():
 @login_required
 def edit_inactives(user_id):
     if current_user.department == 3 or current_user.department == 4:
-      conn = sql.connect('db.sqlite3')
+      conn = mysql.connector.connect(**config)
       db = conn.cursor()
-      customer = db.execute('''
+      db.execute('''
       SELECT user_id,user.username,inactive_date,portal_inactivated_date,updated_portal,user.name
-       FROM recent_inactives JOIN user ON user_id = id WHERE user_id = ?''',[user_id]).fetchall()[0]
+       FROM recent_inactives JOIN User_data user ON user_id = id WHERE user_id = %s''',[user_id])
+      customer = db.fetchall()[0]
       if request.method == "POST":
           if request.form['status'] == 'Y':
-              db.execute('''UPDATE recent_inactives SET updated_portal = 1 WHERE user_id = ?''',[user_id])
-              db.execute('''UPDATE user SET account_status = "Inactive",sub_status="Inactive" WHERE id = ?''',[user_id])
+              db.execute('''UPDATE recent_inactives SET updated_portal = 1 WHERE user_id = %s''',[user_id])
+              db.execute('''UPDATE User_data SET account_status = "Inactive",sub_status="Inactive" WHERE id = %s''',[user_id])
               conn.commit()
               return redirect(url_for('home_blueprint.inactives'))
           return render_template('edit_inactives.html', user=customer)
@@ -317,44 +353,51 @@ def edit_inactives(user_id):
 @login_required
 def raise_issue():
   if current_user.department == 3 or current_user.department == 4:
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
-    customers = db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name
-     FROM user LEFT JOIN zones ON user.zone = zones.id
+    db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name
+     FROM User_data user LEFT JOIN zones ON user.zone = zones.id
      LEFT JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-     ''').fetchall()
-    zones = db.execute('''SELECT * FROM zones''').fetchall()
-    cycles = db.execute('''SELECT * FROM plan_cycles''').fetchall()
+     ''')
+    customers = db.fetchall()
+    db.execute('''SELECT * FROM zones''')
+    zones = db.fetchall()
+    db.execute('''SELECT * FROM plan_cycles''')
+    cycles = db.fetchall()
     if request.method == "POST":
         zone = request.form['zone']
         cycle = request.form['plan_cycle']
         if(zone == '' and cycle == ''):
-            customers = db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name
-                    FROM user LEFT JOIN zones ON user.zone = zones.id
+            db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name
+                    FROM User_data user LEFT JOIN zones ON user.zone = zones.id
                     LEFT JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-                    ''').fetchall()
+                    ''')
+            customers = db.fetchall()
         elif cycle == '':
             zone = int(zone)
-            customers = db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+            db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
             LEFT JOIN zones ON user.zone = zones.id
             LEFT JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-            WHERE zone = ?
-            ''',[zone]).fetchall()
+            WHERE zone = %s
+            ''',[zone])
+            customers = db.fetchall()
         elif zone == '':
             cycle = int(cycle)
-            customers = db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+            db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
             LEFT JOIN zones ON user.zone = zones.id
             LEFT JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-            WHERE plan_cycle = ?
-            ''',[cycle]).fetchall()
+            WHERE plan_cycle = %s
+            ''',[cycle])
+            customers = db.fetchall()
         else:
             cycle = int(cycle)
             zone = int(zone)
-            customers = db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+            db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
             LEFT JOIN zones ON user.zone = zones.id
             LEFT JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-            WHERE plan_cycle = ? and zone = ?
-            ''',[cycle,zone]).fetchall()
+            WHERE plan_cycle = %s and zone = %s
+            ''',[cycle,zone])
+            customers = db.fetchall()
         return render_template('raise_issue copy.html', segment='raise_issue',users=customers,zones = zones,cycles = cycles)
     conn.close()
     return render_template('raise_issue copy.html', segment='raise_issue',users = customers,zones = zones,cycles = cycles)
@@ -367,20 +410,23 @@ def raising(user_id):
    if current_user.department == 3 or current_user.department == 4:
      errors = []
      valid = False
-     conn = sql.connect('db.sqlite3')
+     conn = mysql.connector.connect(**config)
      db = conn.cursor()
-     output = db.execute('''SELECT * FROM issue_priorities''')
-     priorities = output.fetchall()
-     output = db.execute('''SELECT * FROM dept''')
-     departments = output.fetchall()
-     issue_types = db.execute('''SELECT * FROM complaint_type''').fetchall()
-     reps = db.execute('''SELECT id,username,name FROM users''').fetchall()
-     user_info = db.execute('''
+     db.execute('''SELECT * FROM issue_priorities''')
+     priorities = db.fetchall()
+     db.execute('''SELECT * FROM dept''')
+     departments = db.fetchall()
+     db.execute('''SELECT * FROM complaint_type''')
+     issue_types = db.fetchall()
+     db.execute('''SELECT id,username,name FROM users''')
+     reps = db.fetchall()
+     db.execute('''
      SELECT username, mobile, email, status, zones.name,user.id,user.name,address
      FROM user
      LEFT JOIN zones ON user.zone = zones.id
-     WHERE user.id = ?
-     ''',[user_id]).fetchall()[0]
+     WHERE user.id = %s
+     ''',[user_id])
+     user_info = db.fetchall()[0]
      if request.method == 'POST':
          if not request.form['description']:
              errors.append('You have to enter a description')
@@ -394,7 +440,7 @@ def raising(user_id):
              description = "UserName: " +  str(user_info[0]) + " Customer Name: " + str(user_info[6]) + " Zone: " + str(user_info[4]) + " Mobile: " + str(user_info[1]) + " Address: " + str(user_info[7])
              db.execute('''INSERT INTO issues (
                description, priority, department, raised_by, created, modified,issue_type_id,effected_customer_email,complaint_type,effected_customer,assigned_to)
-               VALUES (?, ?, ?, ?, ?, ?,?,?, ?,?,?)''',
+               VALUES (?, %s, %s, %s, %s, %s,%s,%s, %s,%s,%s)''',
                         [description,
                          request.form['priority'],
                          request.form['department'],
@@ -427,14 +473,15 @@ def raising(user_id):
                 }
              try:
                 response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
-                db.execute('''UPDATE issues SET customer_message_start = ? WHERE issue_id = ?''',[response.text,issue_id])
+                db.execute('''UPDATE issues SET customer_message_start = %s WHERE issue_id = %s''',[response.text,issue_id])
                 conn.commit()
              except:
-                db.execute('''UPDATE issues SET customer_message_start = ? WHERE issue_id = ?''',[sys.exc_info()[0],issue_id])
+                db.execute('''UPDATE issues SET customer_message_start = %s WHERE issue_id = %s''',[sys.exc_info()[0],issue_id])
                 conn.commit()
 
              message= "Customer Name: "+ user_info[6] + "\nComplaint: " + request.form['type'] + "\nCustomer Address:" + user_info[7] + "\nCustomer Mobile:" + str(user_info[1]) +"\nPlease act fast, make us proud --Team KRP Broadband"
-             mobile=str(db.execute('''SELECT mobile FROM users where id = ?''',[assignee]).fetchall()[0][0])
+             db.execute('''SELECT mobile FROM users where id = %s''',[assignee]).fetchall()[0][0]
+             mobile= str(db.fetchall()[0][0])
              querystring = {
                  "APIKey":apikey,
                  "senderid":senderid,
@@ -450,10 +497,10 @@ def raising(user_id):
                 }
              try:
                 response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
-                db.execute('''UPDATE issues SET assignee_message_start = ? WHERE issue_id = ?''',[response.text,issue_id])
+                db.execute('''UPDATE issues SET assignee_message_start = %s WHERE issue_id = %s''',[response.text,issue_id])
                 conn.commit()
              except:
-                db.execute('''UPDATE issues SET assignee_message_start = ? WHERE issue_id = ?''',["Message did not sent",issue_id])
+                db.execute('''UPDATE issues SET assignee_message_start = %s WHERE issue_id = %s''',["Message did not sent",issue_id])
                 conn.commit()
              return redirect(url_for('home_blueprint.dashboard'))
      conn.close()
@@ -466,11 +513,10 @@ def raising(user_id):
 def dashboard():
     if current_user.department != 1:
       issues = None
-      conn = sql.connect('db.sqlite3')
+      conn = mysql.connector.connect(**config)
       conn.row_factory = sql.Row
-
       db = conn.cursor()
-      output = db.execute('''
+      db.execute('''
       SELECT
            issues.issue_id AS issue_id,
            issues.description as description,
@@ -484,8 +530,9 @@ def dashboard():
       LEFT JOIN users ON issues.assigned_to = users.id
       WHERE issue_type_id <> 1
       and issues.status < 3
-      ''').fetchall()
-      closed = db.execute('''
+      ''')
+      output = db.fetchall()
+      db.execute('''
       SELECT
            issues.issue_id AS issue_id,
            issues.description as description,
@@ -498,7 +545,8 @@ def dashboard():
       LEFT JOIN users ON issues.assigned_to = users.id
       WHERE issue_type_id <> 1
       and issues.status = 3
-      ''').fetchall()
+      ''')
+      closed = db.fetchall()
       conn.close()
       return render_template('dashboard.html', issues=output,type=0,closed=closed)
     else:
@@ -509,11 +557,12 @@ def dashboard():
 def update_issue(issue_id):
   if current_user.department != 1:
     errors = []
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
-    issue = list(db.execute('''SELECT issues.*,user.username FROM issues
-    LEFT JOIN user ON issues.effected_customer = user.id
-     WHERE issue_id = ?''',[issue_id]).fetchall()[0])
+    db.execute('''SELECT issues.*,user.username FROM issues
+    LEFT JOIN User_data user ON issues.effected_customer = user.id
+     WHERE issue_id = %s''',[issue_id])
+    issue = list(db.fetchall()[0])
     if request.method == 'POST':
         if int(request.form['status']) < 0:
             status = issue[4]
@@ -524,7 +573,7 @@ def update_issue(issue_id):
         else:
             if request.form['status'] ==  3:
                 message="Thank you!! Our team has resolved your request, if you are still facing the issue, please contact us again --Team KRP Broadband"
-                mobile= str(db.execute('''SELECT mobile FROM user where id = (SELECT effected_customer FROM issues where issue_id = ?)''',[issue_id]).fetchall()[0][0])
+                mobile= str(db.execute('''SELECT mobile FROM User_data user where id = (SELECT effected_customer FROM issues where issue_id = %s)''',[issue_id]).fetchall()[0][0])
                 querystring = {
                     "APIKey":apikey,
                     "senderid":senderid,
@@ -540,13 +589,13 @@ def update_issue(issue_id):
                    }
                 try:
                     response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
-                    db.execute('''UPDATE issues SET customer_message_end = ? WHERE issue_id = ?''',[response.text,issue_id])
+                    db.execute('''UPDATE issues SET customer_message_end = %s WHERE issue_id = %s''',[response.text,issue_id])
                     conn.commit()
                 except:
-                    db.execute('''UPDATE issues SET customer_message_end = ? WHERE issue_id = ?''',["Message Did not send",issue_id])
+                    db.execute('''UPDATE issues SET customer_message_end = %s WHERE issue_id = %s''',["Message Did not send",issue_id])
                     conn.commit()
-            db.execute('''UPDATE issues SET assigned_to = ?, status = ?
-                    WHERE issue_id = ?''',
+            db.execute('''UPDATE issues SET assigned_to = %s, status = %s
+                    WHERE issue_id = %s''',
                        [request.form['assigned_to'], status, issue_id])
             fiber_cable = 0
             lockwire = 0
@@ -621,50 +670,51 @@ def update_issue(issue_id):
                 if aadhar.filename != '':
                     filename = secure_filename(aadhar.filename)
                     aadhar.save(os.path.join('app/home/uploads', str(issue[9]) + '_aadhar_' + filename))
-                    db.execute('''UPDATE user SET aadhar_status = 1 WHERE id = ?''',[issue[9]])
+                    db.execute('''UPDATE User_data SET aadhar_status = 1 WHERE id = %s''',[issue[9]])
                     conn.commit()
                 photo = request.files['photo']
                 if photo.filename != '':
                     filename = secure_filename(photo.filename)
                     photo.save(os.path.join('app/home/uploads', str(issue[9]) + '_photo_' + filename))
-                    db.execute('''UPDATE user SET photo_status = 1 where id = ?''',[issue[9]])
+                    db.execute('''UPDATE User_data SET photo_status = 1 where id = %s''',[issue[9]])
                     conn.commit()
                 caf = request.files['caf']
                 if caf.filename != '':
                     filename = secure_filename(caf.filename)
                     photo.save(os.path.join('app/home/uploads', str(issue[9]) + '_photo_' + filename))
-                    db.execute('''UPDATE user SET caf_status = 1 where id = ?''',[issue[9]])
+                    db.execute('''UPDATE User_data SET caf_status = 1 where id = %s''',[issue[9]])
                     conn.commit()
                 if request.form['username']:
-                    db.execute('''UPDATE user SET username = ?
-                    WHERE id = ?''',[request.form['username'],issue[9]])
-                    db.execute('''UPDATE issues SET new_customer_id = ? WHERE issue_id = ?''',[request.form['username'],issue_id])
+                    db.execute('''UPDATE User_data SET username = %s
+                    WHERE id = %s''',[request.form['username'],issue[9]])
+                    db.execute('''UPDATE issues SET new_customer_id = %s WHERE issue_id = %s''',[request.form['username'],issue_id])
                     conn.commit()
                 if(int(request.form['status'])==3):
                     current_time = datetime.datetime.now().date()
-                    plan_cycle = int(db.execute('''SELECT plan_cycle from user where id = ?''',[issue[9]]).fetchall()[0][0])
-
+                    db.execute('''SELECT plan_cycle FROM User_data user where id = %s''',[issue[9]])
+                    plan_cycle = int(db.fetchall()[0][0])
                     due_start_date = next_due_date(plan_cycle,current_time,1)
-                    amount_info = db.execute('''SELECT due_amount,one_interval_amount FROM balance_info where user_id = ?''',[issue[9]]).fetchall()[0]
+                    db.execute('''SELECT due_amount,one_interval_amount FROM balance_info where user_id = %s''',[issue[9]])
+                    amount_info = db.fetchall()[0]
                     amount = int(amount_info[0])
                     one_interval_amount = int(amount_info[1])
 
                     db.execute('''UPDATE balance_info
-                    SET due_start_date = ?,last_paid_date = ?,paid_amount = ?,due_amount = 0,customer_status= 'Active'
+                    SET due_start_date = %s,last_paid_date = %s,paid_amount = %s,due_amount = 0,customer_status= 'Active'
                     ,pending_intervals = 0
-                     WHERE user_id = ?''',
+                     WHERE user_id = %s''',
                             [due_start_date,current_time,amount,issue[9]])
 
                     db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-                    VALUES(?,0,?,"Active",?,?,0)
+                    VALUES(?,0,%s,"Active",%s,%s,0)
                     ''',[issue[9],one_interval_amount,current_time,due_start_date])
 
-                    db.execute('''UPDATE user SET account_status = 'Active',sub_status = "Active", status = "Active" WHERE id = ?''',[issue[9]])
+                    db.execute('''UPDATE User_data SET account_status = 'Active',sub_status = "Active", status = "Active" WHERE id = %s''',[issue[9]])
                     db.execute('''INSERT INTO transactions(user_id,amount,payment_type,salesman,billno,timestamp)
-                    VALUES(?,?, ?, ?, ?, ?)
+                    VALUES(?,%s, %s, %s, %s, %s)
                     ''',[issue[9],amount,'CASH',current_user.username,request.form['billno'],current_time])
                     if plan_cycle == 2:
-                        db.execute('''UPDATE user SET plan_cycle = 1 WHERE id = ?''',[issue[9]])
+                        db.execute('''UPDATE User_data SET plan_cycle = 1 WHERE id = %s''',[issue[9]])
                         conn.commit()
                     conn.commit()
             conn.commit()
@@ -672,11 +722,16 @@ def update_issue(issue_id):
             url_return_link = 'home_blueprint.new_requests' if issue[7] == 1 else 'home_blueprint.dashboard'
             return redirect(url_for(url_return_link))
 
-    priorities = db.execute('''SELECT * FROM issue_priorities''').fetchall()
-    departments = db.execute('''SELECT * FROM dept''').fetchall()
-    statuses = db.execute('''SELECT * FROM issue_status''').fetchall()
-    reps = db.execute('''SELECT * FROM users''').fetchall()
-    issue_type = db.execute('''SELECT issue_type_id FROM issues WHERE issue_id = ?''',[issue_id]).fetchall()[0][0]
+    db.execute('''SELECT * FROM issue_priorities''')
+    priorities = db.fetchall()
+    db.execute('''SELECT * FROM dept''')
+    departments = db.fetchall()
+    db.execute('''SELECT * FROM issue_status''')
+    statuses = db.fetchall()
+    db.execute('''SELECT * FROM users''')
+    reps = db.fetchall()
+    db.execute('''SELECT issue_type_id FROM issues WHERE issue_id = %s''',[issue_id])
+    issue_type = db.fetchall()[0][0]
     conn.close()
     return render_template('update_issue.html', issue=issue,
                            priorities=priorities, departments=departments,
@@ -690,7 +745,7 @@ def new_connection():
   if current_user.department == 3 or current_user.department == 4:
     errors = []
     valid = False
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
     if request.method == 'POST':
        if not request.form['name']:
@@ -709,13 +764,14 @@ def new_connection():
            print(request.form['zone'])
            print(type(request.form['zone']))
            discount = int(0 if request.form['discount'] == '' else request.form['discount'])
-           actual_price = db.execute('''select price FROM plans WHERE plan_id = ?''',[request.form['rate_plan']]).fetchall()[0][0]
+           db.execute('''select price FROM plans WHERE plan_id = %s''',[request.form['rate_plan']])
+           actual_price = db.fetchall()[0][0]
            discounted_price = int((100-discount)*actual_price/100)
            time_now = datetime.datetime.now()
-           db.execute('''INSERT INTO user (
+           db.execute('''INSERT INTO User_data (
              name, address, mobile, altMobile, email, rate_plan, plan_cycle, zone,actual_amount,discount_amount, modifer,installation_charge,modified_timestamp
              ,account_status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+             VALUES (?, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
                       [request.form['name'],
                        request.form['add'],
                        request.form['mobile'],
@@ -730,7 +786,8 @@ def new_connection():
                        int(request.form['installprice']),
                        time_now,
                    'Inactive'])
-           user_info = db.execute('''SELECT id,plan_cycle FROM user WHERE modified_timestamp=?''',[time_now]).fetchall()[0]
+           db.execute('''SELECT id,plan_cycle FROM User_data user WHERE modified_timestamp= %s''',[time_now])
+           user_info = db.fetchall()[0]
            latest_user = int(user_info[0])
            plan_cycle = int(user_info[1])
            amount_calc = 1
@@ -746,7 +803,7 @@ def new_connection():
            one_interval_amount = amount_calc * discounted_price
            db.execute('''INSERT INTO issues (
              description, priority, department, raised_by, created, modified,issue_type_id,effected_customer,new_customer_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?,'')''',
+             VALUES (?, %s, %s, %s, %s, %s, %s, %s,'')''',
                       ['Name: ' + request.form['name'] + '\nAddress: '+request.form['add'] + '\nMobile: '+request.form['mobile']
                       +'\nAlternate Mobile: '+request.form['altmobile']
                       ,
@@ -760,7 +817,7 @@ def new_connection():
                    ])
            db.execute('''INSERT INTO balance_info (
              user_id, due_amount, paid_amount,  one_interval_amount, pending_intervals)
-             VALUES (?, ?, ?, ?, ?)''',
+             VALUES (?, %s, %s, %s, %s)''',
                       [
                        latest_user,
                        discounted_price + int(request.form['installprice']),
@@ -786,18 +843,19 @@ def new_connection():
            issue_id = db.execute('''SELECT MAX(issue_id) FROM issues''').fetchall()[0][0]
            try:
                 response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
-                db.execute('''UPDATE issues SET customer_message_start = ? WHERE issue_id = ?''',[response.text,issue_id])
+                db.execute('''UPDATE issues SET customer_message_start = %s WHERE issue_id = %s''',[response.text,issue_id])
                 conn.commit()
            except:
-                db.execute('''UPDATE issues SET customer_message_start = ? WHERE issue_id = ?''',["Message Not Sent",issue_id])
+                db.execute('''UPDATE issues SET customer_message_start = %s WHERE issue_id = %s''',["Message Not Sent",issue_id])
                 conn.commit()
            return redirect(url_for('home_blueprint.new_requests'))
 
-    zones = db.execute('''SELECT * FROM zones''').fetchall()
-    output = db.execute('''SELECT * FROM plan_cycles''')
-    cycles = output.fetchall()
-    output = db.execute('''SELECT * FROM plans''')
-    plans = output.fetchall()
+    db.execute('''SELECT * FROM zones''')
+    zones = db.fetchall()
+    db.execute('''SELECT * FROM plan_cycles''')
+    cycles = db.fetchall()
+    db.execute('''SELECT * FROM plans''')
+    plans = db.fetchall()
     conn.close()
     # return render_template('index.html')
     return render_template('new_connection.html', cycles=cycles,zones=zones, plans=plans, errors=errors)
@@ -810,11 +868,11 @@ def new_requests():
   if current_user.department != 1:
     issues = None
     # user_id = g.user['user_id']
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     conn.row_factory = sql.Row
 
     db = conn.cursor()
-    output = db.execute('''
+    db.execute('''
     SELECT
          issues.issue_id AS issue_id,
          issues.description as description,
@@ -828,8 +886,9 @@ def new_requests():
     LEFT JOIN users ON issues.assigned_to = users.id
     WHERE issue_type_id = 1
     AND status < 3
-    ''').fetchall()
-    closed = db.execute('''
+    ''')
+    output = db.fetchall()
+    db.execute('''
     SELECT
          issues.issue_id AS issue_id,
          issues.description as description,
@@ -843,7 +902,8 @@ def new_requests():
     LEFT JOIN users ON issues.assigned_to = users.id
     WHERE issue_type_id = 1
     AND status = 3
-    ''').fetchall()
+    ''')
+    closed = db.fetchall()
     conn.close()
     return render_template('dashboard.html', issues=output,type=1,closed=closed)
   else:
@@ -854,13 +914,15 @@ def new_requests():
 def payment_add(user_id):
   if current_user.department != 2:
     errors = []
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
-    user = list(db.execute('''
+    db.execute('''
     SELECT user_id,due_amount,username,due_start_date,pending_intervals, plan_cycle,one_interval_amount,
     name,address
-                 FROM balance_info JOIN user ON user_id = id WHERE user_id = ?''',[user_id]).fetchall()[0])
-    modes = db.execute('''SELECT * FROM modes''').fetchall()
+                 FROM balance_info JOIN User_data user ON user_id = id WHERE user_id = %s''',[user_id])
+    user = list(db.fetchall()[0])
+    db.execute('''SELECT * FROM modes''')
+    modes = db.fetchall()
     if request.method == 'POST':
         current_time = datetime.datetime.now().replace(microsecond = 0)
         due_amount = int(request.form['due_amount'])
@@ -872,12 +934,12 @@ def payment_add(user_id):
         billing_date = datetime.datetime.strptime(user[3],"%Y-%m-%d").date()
         due_date = next_due_date(user[5],billing_date,paid_intervals)
 
-        db.execute('''UPDATE balance_info SET paid_amount = paid_amount + ?, due_amount = due_amount - ?, due_start_date = ?,last_paid_date = ?
-                WHERE user_id = ?''',
+        db.execute('''UPDATE balance_info SET paid_amount = paid_amount + ?, due_amount = due_amount - ?, due_start_date = %s,last_paid_date = %s
+                WHERE user_id = %s''',
                    [paid_amount, paid_amount, due_date, current_time.date(),user_id])
         #Message API
         message="We have received your payment of " + str(paid_amount) + "You have paid to our collection executive "+current_user.username +"--Team KRP Broadband"
-        mobile= db.execute('''SELECT mobile FROM USER where id = ?''',[user_id]).fetchall()[0][0]
+        mobile= db.execute('''SELECT mobile FROM User_data user where id = %s''',[user_id]).fetchall()[0][0]
         querystring = {
             "APIKey":apikey,
             "senderid":senderid,
@@ -894,16 +956,16 @@ def payment_add(user_id):
         try:
             response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
             db.execute('''INSERT INTO transactions(user_id,amount,payment_type,salesman,billno,timestamp,payment_receipt_message)
-        VALUES(?,?, ?, ?, ?,?,?)
+        VALUES(?,%s, %s, %s, %s,%s,%s)
         ''',[user_id,paid_amount,mode,current_user.username,request.form['billno'],current_time,response.text])
             conn.commit()
         except:
             db.execute('''INSERT INTO transactions(user_id,amount,payment_type,salesman,billno,timestamp,payment_receipt_message)
-        VALUES(?,?, ?, ?, ?,?,?)
+        VALUES(?,%s, %s, %s, %s,%s,%s)
         ''',[user_id,paid_amount,mode,current_user.username,request.form['billno'],current_time,'Message Did not sent'])
             conn.commit()
 
-        db.execute('''UPDATE unsettled_balance SET due_amount = due_amount - ? WHERE user_id = ?''',[paid_amount,user_id])
+        db.execute('''UPDATE unsettled_balance SET due_amount = due_amount - ? WHERE user_id = %s''',[paid_amount,user_id])
         conn.commit()
         return redirect(url_for('home_blueprint.payment'))
     conn.close()
@@ -916,17 +978,18 @@ def payment_add(user_id):
 def update_user_profile(user_id):
   if current_user.department == 3:
     errors = []
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
     current_time = datetime.datetime.now()
-    user_info = list(db.execute('''
+    db.execute('''
     SELECT
     id, username, email ,
     mobile , status , address ,
     zone ,name ,    altMobile ,
     rate_plan ,    plan_cycle ,    modifer ,
     modified_timestamp,    sub_status ,account_status,
-    discount_amount,billing_date  FROM user WHERE id = ?''',[user_id]).fetchall()[0])
+    discount_amount,billing_date  FROM User_data user WHERE id = %s''',[user_id])
+    user_info = list(db.fetchall()[0])
     if request.method == 'POST':
         if ( request.form['mobile']==user_info[3]
          and request.form['status']==user_info[4] and request.form['add']==user_info[5]
@@ -938,37 +1001,39 @@ def update_user_profile(user_id):
         else:
             db.execute('''
             INSERT INTO user_history VALUES(
-            ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+            ?,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
             )
             ''',[user_id,user_info[1],user_info[2],request.form['mobile'],request.form['status'],request.form['add'],
             'NA',request.form['zone'],user_info[5],request.form['altmobile'],request.form['plan'],request.form['cycle'],current_user.username,current_time,
             request.form['sub'],request.form['account'],int(request.form['final_amount'])])
 
             if(user_info[4]=='Active' and request.form['status'] == 'Inactive' and user_info[10] != 7):
-                due_amount = int(db.execute('''SELECT due_amount FROM balance_info WHERE user_id = ?''',[user_id]).fetchall()[0][0])
+                due_amount = int(db.execute('''SELECT due_amount FROM balance_info WHERE user_id = %s''',[user_id]).fetchall()[0][0])
                 if due_amount != 0 :
-                    check = db.execute('''SELECT * FROM unsettled_balance WHERE user_id = ?''',[user_id]).fetchall()
+                    db.execute('''SELECT * FROM unsettled_balance WHERE user_id = %s''',[user_id])
+                    check = db.fetchall()
                     if(len(check) == 0):
-                        db.execute('''INSERT INTO unsettled_balance VALUES(?,?,1)''',[user_id,due_amount])
+                        db.execute('''INSERT INTO unsettled_balance VALUES(?,%s,1)''',[user_id,due_amount])
                         conn.commit()
                     else:
-                        db.execute('''UPDATE unsettled_balance SET due_amount = due_amount + ?,no_of_times = no_of_times+1 WHERE user_id = ?''',due_amount,user_id)
+                        db.execute('''UPDATE unsettled_balance SET due_amount = due_amount + ?,no_of_times = no_of_times+1 WHERE user_id = %s''',due_amount,user_id)
                         conn.commit()
 
                 db.execute('''INSERT INTO recent_inactives(user_id,username,inactive_date,updated_portal)
-                VALUES(?,?,?,?)''',[user_id,user_info[1],datetime.datetime.now().date(),0])
-                db.execute('''UPDATE balance_info SET customer_status = "Inactive" WHERE user_id =?''',[user_id])
+                VALUES(?,%s,%s,%s)''',[user_id,user_info[1],datetime.datetime.now().date(),0])
+                db.execute('''UPDATE balance_info SET customer_status = "Inactive" WHERE user_id = %s''',[user_id])
                 conn.commit()
 
             if(user_info[4]=='Active' and request.form['status'] == 'Inactive' and user_info[10] == 7):
-                db.execute('''INSERT INTO balance_info VALUES(?,?,?,?,?,"Inactive",?,?)''',[user_id,0,0,None,None,0,0])
+                db.execute('''INSERT INTO balance_info VALUES(?,%s,%s,%s,%s,"Inactive",%s,%s)''',[user_id,0,0,None,None,0,0])
                 db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-                VALUES(?,?,?,"Inactive",?,?,?)''',[user_id,0,0,None,None,0])
+                VALUES(?,%s,%s,"Inactive",%s,%s,%s)''',[user_id,0,0,None,None,0])
                 conn.commit()
 
             if(user_info[4]=='Inactive' and request.form['status'] == 'Active'):
 
-                previous_due_amount = int(db.execute('''SELECT due_amount FROM balance_info where user_id = ?''',[user_id]).fetchall()[0][0])
+                db.execute('''SELECT due_amount FROM balance_info where user_id = %s''',[user_id])
+                previous_due_amount = int(db.fetchall()[0][0])
                 plan_cycle = int(request.form['cycle'])
                 amount_calc = 1
                 if plan_cycle == 1:
@@ -982,15 +1047,16 @@ def update_user_profile(user_id):
                 if plan_cycle == 5 or plan_cycle == 6 or plan_cycle == 7 or plan_cycle == 0:
                     amount_calc = 0
 
-                plan_amount = int(db.execute('''SELECT price FROM plans where plan_id = ?''',[int(request.form['plan'])]).fetchall()[0][0])
+                db.execute('''SELECT price FROM plans where plan_id = %s''',[int(request.form['plan'])])
+                plan_amount = int(db.fetchall()[0][0])
                 new_amount = plan_amount * amount_calc
 
-                db.execute('''UPDATE balance_info SET due_amount = due_amount + ?,due_start_date = ?,customer_status="Active",
-                one_interval_amount = ?,pending_intervals = pending_intervals + 1 WHERE user_id = ?
+                db.execute('''UPDATE balance_info SET due_amount = due_amount + ?,due_start_date = %s,customer_status="Active",
+                one_interval_amount = %s,pending_intervals = pending_intervals + 1 WHERE user_id = %s
                 ''',[new_amount,datetime.datetime.now().date(),new_amount,user_id])
                 next_invoice_date = next_due_date(plan_cycle,datetime.datetime.now().date(),1)
                 db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-                VALUES(?,?,?,"Active",?,?,?)
+                VALUES(?,%s,%s,"Active",%s,%s,%s)
                 ''',[user_id,previous_due_amount,new_amount,datetime.datetime.now().date(),next_invoice_date,0])
                 conn.commit()
 
@@ -1018,7 +1084,7 @@ def update_user_profile(user_id):
                 due_amount_total = periods * amount_calc * plan_amount
                 one_period_amount = plan_amount * amount_calc
                 db.execute('''INSERT INTO balance_info(user_id,due_amount,customer_status,due_start_date, pending_intervals,one_interval_amount,paid_amount)
-                VALUES(?,?,?,?,?,?,?)
+                VALUES(?,%s,%s,%s,%s,%s,%s)
                 ''',[user_id,due_amount_total,"Active",billing_date,periods,one_period_amount,0])
 
                 due_amount = due_amount_total - one_period_amount
@@ -1028,10 +1094,11 @@ def update_user_profile(user_id):
                 next_invoice_date = next_due_date(plan_cycle,invoice_date,1)
 
                 db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-                 VALUES(?,?,?,?,?,?,?)''',[user_id,due_amount,one_period_amount,"Active",invoice_date,next_invoice_date,0])
+                 VALUES(?,%s,%s,%s,%s,%s,%s)''',[user_id,due_amount,one_period_amount,"Active",invoice_date,next_invoice_date,0])
                 conn.commit()
 
-            new_amount = int(db.execute('''select price from plans where plan_id = ?''',[int(request.form['plan'])]).fetchall()[0][0])
+            db.execute('''select price from plans where plan_id = %s''',[int(request.form['plan'])])
+            new_amount = int(db.fetchall()[0][0])
 
             if(user_info[4] == request.form['status'] and user_info[10] != 7 and user_info[9] != int(request.form['plan'])):
                 plan_cycle = int(request.form['cycle'])
@@ -1048,33 +1115,38 @@ def update_user_profile(user_id):
                     amount_calc = 0
                 due_amount_total = amount_calc * new_amount
                 db.execute('''UPDATE balance_info SET due_amount = due_amount + ?,pending_intervals = pending_intervals + 1
-                ,one_interval_amount = ?
-                WHERE user_id = ?
+                ,one_interval_amount = %s
+                WHERE user_id = %s
                 ''',[due_amount_total,due_amount_total,user_id])
 
                 next_invoice_date = next_due_date(plan_cycle,datetime.datetime.now().date,1)
-                previous_due_amount = int(db.execute('''SELECT due_amount FROM balance_info where user_id = ?''',[user_id]).fetchall()[0][0])
+                db.execute('''SELECT due_amount FROM balance_info where user_id = %s''',[user_id])
+                previous_due_amount = int(db.fetchall()[0][0])
                 db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-                 VALUES(?,?,?,?,?,?,?)''',[user_id,previous_due_amount,due_amount_total,"Active",datetime.datetime.now().date(),next_invoice_date,0])
+                 VALUES(?,%s,%s,%s,%s,%s,%s)''',[user_id,previous_due_amount,due_amount_total,"Active",datetime.datetime.now().date(),next_invoice_date,0])
+                 
                 conn.commit()
 
             if (user_info[9] == int(request.form['plan'])):
                 new_amount = int(request.form['final_amount'])
 
             db.execute('''
-            UPDATE user SET mobile = ?,status = ?,address = ?,zone=?,
-            altMobile=?,rate_plan=?,plan_cycle=?,modified_timestamp=?,modifer=?,sub_status=?,account_status=?
-                        ,discount_amount=?
-                        WHERE id = ?
+            UPDATE User_data SET mobile = %s,status = %s,address = %s,zone= %s,
+            altMobile= %s,rate_plan= %s,plan_cycle= %s,modified_timestamp= %s,modifer= %s,sub_status= %s,account_status= %s
+                        ,discount_amount= %s
+                        WHERE id = %s
             ''',[request.form['mobile'],request.form['status'],request.form['add'],
             int(request.form['zone']),request.form['altmobile'],int(request.form['plan']),int(request.form['cycle']),current_user.username,current_time,
             request.form['sub'],request.form['account']
            ,new_amount,user_id])
             conn.commit()
             return redirect(url_for('home_blueprint.users'))
-    zones = db.execute('''SELECT * FROM zones''').fetchall()
-    cycles = db.execute('''SELECT * FROM plan_cycles WHERE id IN (1,2,3,4)''').fetchall()
-    plans = db.execute('''SELECT * FROM plans WHERE plan_id IN (1,7,15,16,17)''').fetchall()
+    db.execute('''SELECT * FROM zones''')
+    zones = db.fetchall()
+    db.execute('''SELECT * FROM plan_cycles WHERE id IN (1,2,3,4)''')
+    cycles = db.fetchall()
+    db.execute('''SELECT * FROM plans WHERE plan_id IN (1,7,15,16,17)''')
+    plans = db.fetchall()
     conn.close()
     return render_template('update_profile.html', user=user_info,cycles=cycles,zones=zones, plans=plans)
   else:
@@ -1085,11 +1157,12 @@ def update_user_profile(user_id):
 def payment():
   if current_user.department != 2:
     issues = None
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     conn.row_factory = sql.Row
     db = conn.cursor()
-    zones = db.execute('''select * from zones''').fetchall()
-    output = db.execute('''
+    db.execute('''select * from zones''')
+    zones = db.fetchall()
+    db.execute('''
      SELECT
          user.username as username,
          user.name AS Name,
@@ -1099,10 +1172,11 @@ def payment():
          user.id as user_id,
          due_start_date,
          user.zone
-                              FROM balance_info LEFT JOIN user ON user_id = id WHERE due_amount > 0
+                              FROM balance_info LEFT JOIN User_data user ON user_id = id WHERE due_amount > 0
                               and customer_status = 'Active'
                               order by due_amount desc
-                              ''').fetchall()
+                              ''')
+    output = db.fetchall()
     if request.method == "POST":
         zone = request.form['zone']
         start_date = request.form['start_date']
@@ -1120,7 +1194,7 @@ def payment():
             zone = '0'
         zone = int(zone)
         if zone == 0:
-            output = db.execute('''
+            db.execute('''
             SELECT
             user.username as username,
             user.name AS Name,
@@ -1130,13 +1204,14 @@ def payment():
             user.id as user_id,
             due_start_date,
             user.zone
-            FROM balance_info LEFT JOIN user ON user_id = id
+            FROM balance_info LEFT JOIN User_data user ON user_id = id
              WHERE due_amount > 0 and customer_status = 'Active'
              and due_start_date between ? and ?
              order by due_amount desc
-             ''',[start_date,end_date]).fetchall()
+             ''',[start_date,end_date])
+            output = db.fetchall()
         else:
-            output = db.execute('''
+            db.execute('''
                  SELECT
                  user.username as username,
                  user.name AS Name,
@@ -1146,13 +1221,13 @@ def payment():
                  user.id as user_id,
                  due_start_date,
                  user.zone
-             FROM balance_info LEFT JOIN user ON user_id = id
+             FROM balance_info LEFT JOIN User_data user ON user_id = id
               WHERE due_amount > 0 and customer_status = 'Active'
-              and zone = ?
+              and zone = %s
               and due_start_date between ? and ?
               order by due_amount desc
-              ''',[zone,start_date,end_date]).fetchall()
-
+              ''',[zone,start_date,end_date])
+            output = db.fetchall()
         return render_template('payments.html', issues=output, zones = zones,processing_place=1)
     conn.close()
     return render_template('payments.html', issues=output,zones = zones,processing_place=1)
@@ -1164,11 +1239,12 @@ def payment():
 def unsettled_amount():
   if current_user.department == 3 or current_user.department == 1:
     issues = None
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     conn.row_factory = sql.Row
     db = conn.cursor()
-    zones = db.execute('''select * from zones''').fetchall()
-    output = db.execute('''
+    db.execute('''select * from zones''')
+    zones = db.fetchall()
+    db.execute('''
      SELECT
          user.username as username,
          user.name AS Name,
@@ -1180,9 +1256,10 @@ def unsettled_amount():
          user.zone
                               FROM balance_info
                               JOIN unsettled_balance ON balance_info.user_id = unsettled_balance.user_id
-                              LEFT JOIN user ON balance_info.user_id = id WHERE balance_info.due_amount > 0
+                              LEFT JOIN User_data user ON balance_info.user_id = id WHERE balance_info.due_amount > 0
                               order by due_amount desc
-                              ''').fetchall()
+                              ''')
+    output = db.fetchall()
     if request.method == "POST":
         zone = request.form['zone']
         start_date = request.form['start_date']
@@ -1200,7 +1277,7 @@ def unsettled_amount():
             zone = '0'
         zone = int(zone)
         if zone == 0:
-            output = db.execute('''
+            db.execute('''
             SELECT
             user.username as username,
             user.name AS Name,
@@ -1210,14 +1287,15 @@ def unsettled_amount():
             user.id as user_id,
             due_start_date,
             user.zone
-            FROM balance_info LEFT JOIN user ON balance_info.user_id = id
+            FROM balance_info LEFT JOIN User_data user ON balance_info.user_id = id
             JOIN unsettled_balance ON balance_info.user_id = unsettled_balance.user_id
              WHERE balance_info.due_amount > 0
              and due_start_date between ? and ?
              order by due_amount desc
-             ''',[start_date,end_date]).fetchall()
+             ''',[start_date,end_date])
+            output = db.fetchall()
         else:
-            output = db.execute('''
+            db.execute('''
                  SELECT
                  user.username as username,
                  user.name AS Name,
@@ -1227,13 +1305,14 @@ def unsettled_amount():
                  user.id as user_id,
                  due_start_date,
                  user.zone
-             FROM balance_info LEFT JOIN user ON balance_info.user_id = id
+             FROM balance_info LEFT JOIN User_data user ON balance_info.user_id = id
              JOIN unsettled_balance ON balance_info.user_id = unsettled_balance.user_id
               WHERE balance_info.due_amount > 0
-              and zone = ?
+              and zone = %s
               and due_start_date between ? and ?
               order by due_amount desc
-              ''',[zone,start_date,end_date]).fetchall()
+              ''',[zone,start_date,end_date])
+            output = db.fetchall()
         return render_template('unsettled_dues.html', issues=output, zones = zones,processing_place = 0)
     conn.close()
     return render_template('unsettled_dues.html', issues=output,zones = zones,processing_place=0)
@@ -1243,108 +1322,118 @@ def unsettled_amount():
 @blueprint.route('/generate_invoice/<tid>', methods=['GET','POST'])
 @login_required
 def generate_invoice(tid):
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
-    data = db.execute('''SELECT username,address, user.name, plan_name,PRICE,due_amount,current_cycle_amount,
+    db.execute('''SELECT username,address, user.name, plan_name,PRICE,due_amount,current_cycle_amount,
     invoice_date,invoices.id, due_amount + current_cycle_amount as total_amount,plan_cycle,plan_cycles.name,user.mobile,next_invoice_date
     ,actual_amount,discount_amount
      FROM invoices JOIN user
     on user.id = invoices.user_id
     LEFT JOIN plans on rate_plan = plan_id
     LEFT JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
-      WHERE invoices.id = ?''',[tid]).fetchall()[0]
+      WHERE invoices.id = %s''',[tid])
+    data = db.fetchall()[0]
     conn.close()
     return render_template('generate_invoice.html', invoice_details=data)
 
 @blueprint.route('/generate_bill/<tid>', methods=['GET','POST'])
 @login_required
 def generate_bill(tid):
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
-    transactions = db.execute('''
+    db.execute('''
     SELECT
         username, user.id,amount,
         TIMESTAMP,salesman,billno,
         name,transactions.trasaction_id,address,mobile
-     FROM transactions LEFT JOIN user ON user.id = transactions.user_id
-     WHERE trasaction_id = ?
-     ''',[tid]).fetchall()[0]
+     FROM transactions LEFT JOIN User_data user ON user.id = transactions.user_id
+     WHERE trasaction_id = %s
+     ''',[tid])
+    transactions = db.fetchall()[0]
     conn.close()
     return render_template('invoice_test.html', trans_details=transactions)
 
 @blueprint.route('/generate_ledger/<user_id>', methods=['GET','POST'])
 @login_required
 def generate_ledger(user_id):
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
-    data = db.execute('''SELECT username,amount,TIMESTAMP,name,address FROM transactions JOIN user on user_id = id WHERE user_id = ?''',[user_id]).fetchall()
-    total = db.execute('''SELECT sum(amount) FROM transactions WHERE user_id = ?''',[user_id]).fetchall()
+    db.execute('''SELECT username,amount,TIMESTAMP,name,address FROM transactions JOIN User_data user on user_id = id WHERE user_id = %s''',[user_id])
+    data = db.fetchall()
+    db.execute('''SELECT sum(amount) FROM transactions WHERE user_id = %s''',[user_id])
+    total = db.fetchall()
     conn.close()
     return render_template('generate_ledger.html', invoice_details=data, total=total)
 
 def invoice_helper(start_date,end_date):
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
     if start_date == '' and end_date == '':
-        transactions = db.execute('''
+        db.execute('''
             SELECT
                  user.username,user.mobile, user.email,
                  invoices.due_amount,invoices.current_cycle_amount AS amount,
                  invoice_date,invoices.id as invoice_id,
                          zones.name
-                 FROM invoices JOIN user on user_id = user.id
+                 FROM invoices JOIN User_data user on user_id = user.id
                  JOIN zones ON zones.id= user.zone
-                 ''').fetchall()
+                 ''')
+        transactions = db.fetchall()
     elif end_date == '':
         start_date = datetime.datetime.strptime(start_date,"%Y-%m-%d").date()
-        transactions = db.execute('''
+        db.execute('''
             SELECT
                  user.username,user.mobile, user.email,
                  invoices.due_amount,invoices.current_cycle_amount AS amount,
                  invoice_date,invoices.id as invoice_id,
                          zones.name
-                 FROM invoices JOIN user on user_id = user.id
+                 FROM invoices JOIN User_data user on user_id = user.id
                  JOIN zones ON zones.id= user.zone
-                 AND invoice_date >= ?
-                 ''',[start_date]).fetchall()
+                 AND invoice_date >= %s
+                 ''',[start_date])
+        transactions = db.fetchall()
     elif start_date == '':
         end_date = datetime.datetime.strptime(end_date,"%Y-%m-%d").date()
-        transactions = db.execute('''
+        db.execute('''
             SELECT
                  user.username,user.mobile, user.email,
                  invoices.due_amount,invoices.current_cycle_amount AS amount,
                  invoice_date,invoices.id as invoice_id,
                          zones.name
-                 FROM invoices JOIN user on user_id = user.id
+                 FROM invoices JOIN User_data user on user_id = user.id
                  JOIN zones ON zones.id= user.zone
-                 AND invoice_date <= ?
-                 ''',[end_date]).fetchall()
+                 AND invoice_date <= %s
+                 ''',[end_date])
+        transactions = db.fetchall()
     else:
         start_date = datetime.datetime.strptime(start_date,"%Y-%m-%d").date()
         end_date = datetime.datetime.strptime(end_date,"%Y-%m-%d").date()
-        transactions = db.execute('''
+        db.execute('''
             SELECT
                  user.username,user.mobile, user.email,
                  invoices.due_amount,invoices.current_cycle_amount AS amount,
                  invoice_date,invoices.id as invoice_id,
                          zones.name
-                 FROM invoices JOIN user on user_id = user.id
+                 FROM invoices JOIN User_data user on user_id = user.id
                  JOIN zones ON zones.id= user.zone
                  AND invoice_date BETWEEN ? AND ?
-                 ''',[start_date,end_date]).fetchall()
+                 ''',[start_date,end_date])
+        transactions = db.fetchall()
     return transactions
 @blueprint.route('/invoice', methods=['GET', 'POST'])
 @login_required
 def invoice():
   if current_user.department !=2 :
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
-    transactions = db.execute('''SELECT user.username,user.mobile, user.email, invoices.due_amount,invoices.current_cycle_amount AS amount,
+    db.execute('''SELECT user.username,user.mobile, user.email, invoices.due_amount,invoices.current_cycle_amount AS amount,
     invoice_date,invoices.id as invoice_id,
                          zones.name
-     FROM invoices JOIN user on user_id = user.id
-     JOIN zones ON zones.id= user.zone''').fetchall()
-    zones = db.execute('''SELECT * FROM zones''').fetchall()
+     FROM invoices JOIN User_data user on user_id = user.id
+     JOIN zones ON zones.id= user.zone''')
+    transactions = db.fetchall()
+    db.execute('''SELECT * FROM zones''')
+    zones = db.fetchall()
     if request.method == "POST":
         start_date = request.form['start_date']
         end_date = request.form['end_date']
@@ -1354,56 +1443,60 @@ def invoice():
         else:
             zone = int(zone)
             if start_date == '' and end_date == '':
-                transactions = db.execute('''
+                db.execute('''
                     SELECT
                          user.username,user.mobile, user.email,
                          invoices.due_amount,invoices.current_cycle_amount AS amount,
                          invoice_date,invoices.id as invoice_id,
                          zones.name
-                         FROM invoices JOIN user on user_id = user.id
+                         FROM invoices JOIN User_data user on user_id = user.id
                          JOIN zones ON zones.id= user.zone
-                         WHERE user.zone = ?
-                         ''',[zone]).fetchall()
+                         WHERE user.zone = %s
+                         ''',[zone])
+                transactions = db.fetchall()
             elif end_date == '':
                 start_date = datetime.datetime.strptime(start_date,"%Y-%m-%d").date()
-                transactions = db.execute('''
+                db.execute('''
                     SELECT
                          user.username,user.mobile, user.email,
                          invoices.due_amount,invoices.current_cycle_amount AS amount,
                          invoice_date,invoices.id as invoice_id,
                          zones.name
-                         FROM invoices JOIN user on user_id = user.id
+                         FROM invoices JOIN User_data user on user_id = user.id
                          JOIN zones ON zones.id= user.zone
-                         WHERE user.zone = ?
-                         AND invoice_date >= ?
-                         ''',[zone,start_date]).fetchall()
+                         WHERE user.zone = %s
+                         AND invoice_date >= %s
+                         ''',[zone,start_date])
+                transactions = db.fetchall()
             elif start_date == '':
                 end_date = datetime.datetime.strptime(end_date,"%Y-%m-%d").date()
-                transactions = db.execute('''
+                db.execute('''
                     SELECT
                          user.username,user.mobile, user.email,
                          invoices.due_amount,invoices.current_cycle_amount AS amount,
                          invoice_date,invoices.id as invoice_id,
                          zones.name
-                         FROM invoices JOIN user on user_id = user.id
+                         FROM invoices JOIN User_data user on user_id = user.id
                          JOIN zones ON zones.id= user.zone
-                         WHERE user.zone = ?
-                         AND invoice_date <= ?
-                         ''',[zone,end_date]).fetchall()
+                         WHERE user.zone = %s
+                         AND invoice_date <= %s
+                         ''',[zone,end_date])
+                transactions = db.fetchall()
             else:
                 start_date = datetime.datetime.strptime(start_date,"%Y-%m-%d").date()
                 end_date = datetime.datetime.strptime(end_date,"%Y-%m-%d").date()
-                transactions = db.execute('''
+                db.execute('''
                     SELECT
                          user.username,user.mobile, user.email,
                          invoices.due_amount,invoices.current_cycle_amount AS amount,
                          invoice_date,invoices.id as invoice_id,
                          zones.name
-                         FROM invoices JOIN user on user_id = user.id
+                         FROM invoices JOIN User_data user on user_id = user.id
                          JOIN zones ON zones.id= user.zone
-                         WHERE user.zone = ?
+                         WHERE user.zone = %s
                          AND invoice_date BETWEEN ? AND ?
-                         ''',[zone,start_date,end_date]).fetchall()
+                         ''',[zone,start_date,end_date])
+                transactions = db.fetchall()
         transactions = invoice_helper(start_date,end_date)
         return render_template('invoice.html', users=transactions,zones = zones)
     conn.close()
@@ -1415,9 +1508,10 @@ def invoice():
 @login_required
 def update_inventory():
   if current_user.department == 3:
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
-    products = db.execute("SELECT * from products").fetchall()
+    db.execute("SELECT * from products")
+    products = db.fetchall()
     if request.method == 'POST':
         prod_name = request.form['prod_name']
         quantity = request.form['prod_quantity']
@@ -1429,7 +1523,7 @@ def update_inventory():
 
         if transaction_allowed:
             try:
-                db.execute("INSERT INTO products (name, quantity, used_quanity,available_quantity ) VALUES (?, ?,?,?)", (prod_name, quantity,0,quantity))
+                db.execute("INSERT INTO products (name, quantity, used_quanity,available_quantity ) VALUES (?, %s,%s,%s)", (prod_name, quantity,0,quantity))
                 conn.commit()
             except sql.Error as e:
                 msg = f"An error occurred: {e.args[0]}"
@@ -1449,7 +1543,7 @@ def update_inventory():
 @login_required
 def edit():
     type_ = request.args.get('type')
-    conn = sql.connect('db.sqlite3')
+    conn = mysql.connector.connect(**config)
     db = conn.cursor()
 
     if type_ == 'location' and request.method == 'POST':
@@ -1457,7 +1551,7 @@ def edit():
         loc_name = request.form['loc_name']
 
         if loc_name:
-            db.execute("UPDATE location SET loc_name = ? WHERE loc_id == ?", (loc_name, str(loc_id)))
+            db.execute("UPDATE location SET loc_name = %s WHERE loc_id == %s", (loc_name, str(loc_id)))
             conn.commit()
 
         return redirect(url_for('location'))
@@ -1468,12 +1562,12 @@ def edit():
         prod_quantity = request.form['prod_quantity']
 
         if prod_name:
-            db.execute("UPDATE products SET name = ? WHERE id == ?", (prod_name, prod_id))
+            db.execute("UPDATE products SET name = %s WHERE id == %s", (prod_name, prod_id))
         if prod_quantity:
-            db.execute("SELECT quantity FROM products WHERE id = ?", (prod_id,))
+            db.execute("SELECT quantity FROM products WHERE id = %s", (prod_id,))
             old_prod_quantity = db.fetchone()[0]
-            db.execute("UPDATE products SET quantity = ? + ?, available_quantity =  available_quantity + ?"
-                           "WHERE id == ?", (prod_quantity, old_prod_quantity, prod_quantity, prod_id))
+            db.execute("UPDATE products SET quantity = %s + ?, available_quantity =  available_quantity + ?"
+                           "WHERE id == %s", (prod_quantity, old_prod_quantity, prod_quantity, prod_id))
         conn.commit()
 
         return redirect(url_for('home_blueprint.update_inventory'))

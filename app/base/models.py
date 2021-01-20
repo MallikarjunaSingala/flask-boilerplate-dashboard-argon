@@ -15,8 +15,8 @@ class User(db.Model, UserMixin):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String, unique=True)
-    email = Column(String, unique=True)
+    username = Column(String(30), unique=True)
+    email = Column(String(30), unique=True)
     password = Column(Binary)
     department = Column(Integer)
 
