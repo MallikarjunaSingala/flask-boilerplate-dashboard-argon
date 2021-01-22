@@ -28,7 +28,8 @@ config = {
     'user': 'krpcommu_admin',
     'password': 'Vikram@123',
     'host': '172.105.56.108',
-    'database': 'krpcommu_fibernet'
+    'database': 'krpcommu_fibernet',
+    'use_pure': True
 }
 url = "https://www.smsgatewayhub.com/api/mt/SendSMS"
 apikey = "zlK4AxVdjEW230uUT6FVaQ"
