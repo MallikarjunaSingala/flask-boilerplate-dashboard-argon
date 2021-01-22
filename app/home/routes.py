@@ -135,8 +135,7 @@ def index():
     for d in data:
       lables2.append(d[0])
       values2.append(d[1])
-    db.execute(''' SELECT
-  (CASE MONTH(timestamp)
+    db.execute('''SELECT (CASE MONTH(timestamp)
            WHEN '01' THEN 'Jan'
            WHEN '02' THEN 'Feb'
            WHEN '03' THEN 'Mar'
@@ -151,11 +150,10 @@ def index():
            WHEN '12' THEN 'Dec'
            ELSE ''
          END) || '-' || YEAR(timestamp)
-    ,
-       Sum(amount)
-FROM   transactions
-GROUP  BY 1
-ORDER  BY 1  ''')
+        ,sum(amount)
+        FROM   transactions
+        GROUP  BY 1
+        ORDER  BY 1 ''')
     data = db.fetchall()
     values3 = []
     lables3 = []
