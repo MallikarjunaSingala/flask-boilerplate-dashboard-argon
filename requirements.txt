@@ -20,3 +20,6 @@ six
 flask_apscheduler
 google.cloud
 pymysql
+mysql-connector-python
+requests
+idna==2.*
