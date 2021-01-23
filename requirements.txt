@@ -23,3 +23,4 @@ pymysql
 mysql-connector-python
 requests
 idna==2.*
+pandas

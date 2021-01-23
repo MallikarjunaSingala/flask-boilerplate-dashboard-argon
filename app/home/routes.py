@@ -421,7 +421,7 @@ def raising(user_id):
      reps = db.fetchall()
      db.execute('''
      SELECT username, mobile, email, status, zones.name,user.id,user.name,address
-     FROM user
+     FROM User_data user
      LEFT JOIN zones ON user.zone = zones.id
      WHERE user.id = %s
      ''',[user_id])
