@@ -2,11 +2,6 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(__file__))
-
 
 from flask_migrate import Migrate
 from os import environ
@@ -27,6 +22,7 @@ DEBUG = config('DEBUG', default=True)
 get_config_mode = 'Debug'
 
 try:
+
     # Load the configuration using the default values
     app_config = config_dict[get_config_mode.capitalize()]
 

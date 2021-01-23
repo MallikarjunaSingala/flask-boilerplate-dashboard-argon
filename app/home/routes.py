@@ -28,7 +28,8 @@ config = {
     'user': 'krpcommu_admin',
     'password': 'Vikram@123',
     'host': '172.105.56.108',
-    'database': 'krpcommu_fibernet'
+    'database': 'krpcommu_fibernet',
+    'use_pure': True
 }
 url = "https://www.smsgatewayhub.com/api/mt/SendSMS"
 apikey = "zlK4AxVdjEW230uUT6FVaQ"
@@ -153,7 +154,7 @@ def index():
         ,sum(amount)
         FROM   transactions
         GROUP  BY 1
-        ORDER  BY 1 ''')
+        ORDER  BY 1''')
     data = db.fetchall()
     values3 = []
     lables3 = []
