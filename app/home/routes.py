@@ -439,20 +439,10 @@ def raising(user_id):
              description = "UserName: " +  str(user_info[0]) + " Customer Name: " + str(user_info[6]) + " Zone: " + str(user_info[4]) + " Mobile: " + str(user_info[1]) + " Address: " + str(user_info[7])
              db.execute('''INSERT INTO issues (
                description, priority, department, raised_by, created, modified,issue_type_id,effected_customer_email,complaint_type,effected_customer,assigned_to)
-               VALUES (?, %s, %s, %s, %s, %s,%s,%s, %s,%s,%s)''',
-                        [description,
-                         request.form['priority'],
-                         request.form['department'],
-                         current_user.username,
-                         datetime.datetime.now(),
-                         datetime.datetime.now(),
-                     2,
-                     request.form['email'],
-                     request.form['type'],
-                     user_id,
-                     int(request.form['assignee'])
-                 ])
-             issue_id = db.execute('''SELECT MAX(issue_id) FROM issues''').fetchall()[0][0]
+               VALUES (%s, %s, %s, %s, %s, %s,%s,%s, %s,%s,%s)''',[description,request.form['priority'],request.form['department'],current_user.username,datetime.datetime.now(),datetime.datetime.now(),2,request.form['email'],request.form['type'],user_id,int(request.form['assignee'])])
+             conn.commit()
+             db.execute('''SELECT MAX(issue_id) FROM issues''')
+             issue_id = db.fetchall()[0][0]
              assignee = int(request.form['assignee'])
              conn.commit()
              message="Thank you!! We got your complaint for " + request.form['type'] + ". Our team will reach you soon --Team KRP Broadband"
@@ -479,7 +469,7 @@ def raising(user_id):
                 conn.commit()
 
              message= "Customer Name: "+ user_info[6] + "\nComplaint: " + request.form['type'] + "\nCustomer Address:" + user_info[7] + "\nCustomer Mobile:" + str(user_info[1]) +"\nPlease act fast, make us proud --Team KRP Broadband"
-             db.execute('''SELECT mobile FROM users where id = %s''',[assignee]).fetchall()[0][0]
+             db.execute('''SELECT mobile FROM users where id = %s''',[assignee])
              mobile= str(db.fetchall()[0][0])
              querystring = {
                  "APIKey":apikey,
@@ -513,7 +503,6 @@ def dashboard():
     if current_user.department != 1:
       issues = None
       conn = mysql.connector.connect(**config)
-      conn.row_factory = sql.Row
       db = conn.cursor()
       db.execute('''
       SELECT
@@ -572,7 +561,8 @@ def update_issue(issue_id):
         else:
             if request.form['status'] ==  3:
                 message="Thank you!! Our team has resolved your request, if you are still facing the issue, please contact us again --Team KRP Broadband"
-                mobile= str(db.execute('''SELECT mobile FROM User_data user where id = (SELECT effected_customer FROM issues where issue_id = %s)''',[issue_id]).fetchall()[0][0])
+                db.execute('''SELECT mobile FROM User_data user where id = (SELECT effected_customer FROM issues where issue_id = %s)''',[issue_id])
+                mobile= str(db.fetchall()[0][0])
                 querystring = {
                     "APIKey":apikey,
                     "senderid":senderid,
@@ -593,9 +583,11 @@ def update_issue(issue_id):
                 except:
                     db.execute('''UPDATE issues SET customer_message_end = %s WHERE issue_id = %s''',["Message Did not send",issue_id])
                     conn.commit()
+            updated_description = "<br>[" +str(datetime.datetime.now()) + " " + current_user.username +  "]:" + request.form['description']
             db.execute('''UPDATE issues SET assigned_to = %s, status = %s
-                    WHERE issue_id = %s''',
-                       [request.form['assigned_to'], status, issue_id])
+            , description = concat(description, %s)
+                    WHERE issue_id = %s''',[request.form['assigned_to'], status, updated_description, issue_id])
+            conn.commit()
             fiber_cable = 0
             lockwire = 0
             onu = 0
@@ -635,35 +627,36 @@ def update_issue(issue_id):
             db.execute('''
             UPDATE products SET available_quantity = available_quantity - (
             CASE
-             WHEN id = 16 THEN ?
-             WHEN id = 17 THEN ?
-             WHEN id = 15 THEN ?
-             WHEN id = 14 THEN ?
-             WHEN id = 13 THEN ?
-             WHEN id = 12 THEN ?
-             WHEN id = 11 THEN ?
-             WHEN id = 10 THEN ?
-             WHEN id = 9 THEN ?
-             WHEN id = 7 THEN ?
-             WHEN id = 6 THEN ?
+             WHEN id = 16 THEN %s
+             WHEN id = 17 THEN %s
+             WHEN id = 15 THEN %s
+             WHEN id = 14 THEN %s
+             WHEN id = 13 THEN %s
+             WHEN id = 12 THEN %s
+             WHEN id = 11 THEN %s
+             WHEN id = 10 THEN %s
+             WHEN id = 9 THEN %s
+             WHEN id = 7 THEN %s
+             WHEN id = 6 THEN %s
              ELSE 0
              END),
              used_quanity = used_quanity + (
             CASE
-             WHEN id = 16 THEN ?
-             WHEN id = 17 THEN ?
-             WHEN id = 15 THEN ?
-             WHEN id = 14 THEN ?
-             WHEN id = 13 THEN ?
-             WHEN id = 12 THEN ?
-             WHEN id = 11 THEN ?
-             WHEN id = 10 THEN ?
-             WHEN id = 9 THEN ?
-             WHEN id = 7 THEN ?
-             WHEN id = 6 THEN ?
+             WHEN id = 16 THEN %s
+             WHEN id = 17 THEN %s
+             WHEN id = 15 THEN %s
+             WHEN id = 14 THEN %s
+             WHEN id = 13 THEN %s
+             WHEN id = 12 THEN %s
+             WHEN id = 11 THEN %s
+             WHEN id = 10 THEN %s
+             WHEN id = 9 THEN %s
+             WHEN id = 7 THEN %s
+             WHEN id = 6 THEN %s
              ELSE 0
              END)
             ''',[fiber_cable,cat5cable,split18,split14,split12,patchcord,terminationbox,terminationlarge,terminationsmall,rj45,onu,fiber_cable,cat5cable,split18,split14,split12,patchcord,terminationbox,terminationlarge,terminationsmall,rj45,onu])
+            conn.commit()
             if issue[7] == 1:
                 aadhar = request.files['aadhar']
                 if aadhar.filename != '':
@@ -683,17 +676,20 @@ def update_issue(issue_id):
                     photo.save(os.path.join('app/home/uploads', str(issue[9]) + '_photo_' + filename))
                     db.execute('''UPDATE User_data SET caf_status = 1 where id = %s''',[issue[9]])
                     conn.commit()
-                if request.form['username']:
-                    db.execute('''UPDATE User_data SET username = %s
-                    WHERE id = %s''',[request.form['username'],issue[9]])
-                    db.execute('''UPDATE issues SET new_customer_id = %s WHERE issue_id = %s''',[request.form['username'],issue_id])
-                    conn.commit()
+                try:
+                    if request.form['username'] != '':
+                        db.execute('''UPDATE User_data SET username = %s
+                        WHERE id = %s''',[request.form['username'],issue[9]])
+                        db.execute('''UPDATE issues SET new_customer_id = %s WHERE issue_id = %s''',[request.form['username'],issue_id])
+                        conn.commit()
+                except Exception:
+                    pass
                 if(int(request.form['status'])==3):
                     current_time = datetime.datetime.now().date()
                     db.execute('''SELECT plan_cycle FROM User_data user where id = %s''',[issue[9]])
                     plan_cycle = int(db.fetchall()[0][0])
                     due_start_date = next_due_date(plan_cycle,current_time,1)
-                    db.execute('''SELECT due_amount,one_interval_amount FROM balance_info where user_id = %s''',[issue[9]])
+                    db.execute('''SELECT due_amount,one_interval_amount FROM balance_info where user_id = %s''',[int(issue[9])])
                     amount_info = db.fetchall()[0]
                     amount = int(amount_info[0])
                     one_interval_amount = int(amount_info[1])
@@ -703,15 +699,17 @@ def update_issue(issue_id):
                     ,pending_intervals = 0
                      WHERE user_id = %s''',
                             [due_start_date,current_time,amount,issue[9]])
-
+                    conn.commit()
                     db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-                    VALUES(?,0,%s,"Active",%s,%s,0)
+                    VALUES(%s,0,%s,"Active",%s,%s,0)
                     ''',[issue[9],one_interval_amount,current_time,due_start_date])
-
+                    conn.commit()
                     db.execute('''UPDATE User_data SET account_status = 'Active',sub_status = "Active", status = "Active" WHERE id = %s''',[issue[9]])
+                    conn.commit()
                     db.execute('''INSERT INTO transactions(user_id,amount,payment_type,salesman,billno,timestamp)
-                    VALUES(?,%s, %s, %s, %s, %s)
+                    VALUES(%s,%s, %s, %s, %s, %s)
                     ''',[issue[9],amount,'CASH',current_user.username,request.form['billno'],current_time])
+                    conn.commit()
                     if plan_cycle == 2:
                         db.execute('''UPDATE User_data SET plan_cycle = 1 WHERE id = %s''',[issue[9]])
                         conn.commit()
@@ -760,17 +758,15 @@ def new_connection():
        else:
            valid = True
        if valid:
-           print(request.form['zone'])
-           print(type(request.form['zone']))
            discount = int(0 if request.form['discount'] == '' else request.form['discount'])
            db.execute('''select price FROM plans WHERE plan_id = %s''',[request.form['rate_plan']])
            actual_price = db.fetchall()[0][0]
            discounted_price = int((100-discount)*actual_price/100)
-           time_now = datetime.datetime.now()
+           time_now = datetime.datetime.now().replace(microsecond = 0)
            db.execute('''INSERT INTO User_data (
              name, address, mobile, altMobile, email, rate_plan, plan_cycle, zone,actual_amount,discount_amount, modifer,installation_charge,modified_timestamp
              ,account_status)
-             VALUES (?, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
                       [request.form['name'],
                        request.form['add'],
                        request.form['mobile'],
@@ -785,6 +781,7 @@ def new_connection():
                        int(request.form['installprice']),
                        time_now,
                    'Inactive'])
+           conn.commit()
            db.execute('''SELECT id,plan_cycle FROM User_data user WHERE modified_timestamp= %s''',[time_now])
            user_info = db.fetchall()[0]
            latest_user = int(user_info[0])
@@ -802,7 +799,7 @@ def new_connection():
            one_interval_amount = amount_calc * discounted_price
            db.execute('''INSERT INTO issues (
              description, priority, department, raised_by, created, modified,issue_type_id,effected_customer,new_customer_id)
-             VALUES (?, %s, %s, %s, %s, %s, %s, %s,'')''',
+             VALUES (%s, %s, %s, %s, %s, %s, %s, %s,"")''',
                       ['Name: ' + request.form['name'] + '\nAddress: '+request.form['add'] + '\nMobile: '+request.form['mobile']
                       +'\nAlternate Mobile: '+request.form['altmobile']
                       ,
@@ -814,9 +811,10 @@ def new_connection():
                        1,
                        latest_user
                    ])
+           conn.commit()
            db.execute('''INSERT INTO balance_info (
              user_id, due_amount, paid_amount,  one_interval_amount, pending_intervals)
-             VALUES (?, %s, %s, %s, %s)''',
+             VALUES (%s, %s, %s, %s, %s)''',
                       [
                        latest_user,
                        discounted_price + int(request.form['installprice']),
@@ -824,6 +822,7 @@ def new_connection():
                        one_interval_amount,
                        1
                    ])
+           conn.commit()
            message="Thank you for choosing KRP Broadband!! Our team will reach and update you the next steps, please make us the payment at the time of installation --Team KRP Broadband"
            mobile= request.form['mobile']
            querystring = {
@@ -839,7 +838,8 @@ def new_connection():
            headers = {
               'cache-control': "no-cache",
               }
-           issue_id = db.execute('''SELECT MAX(issue_id) FROM issues''').fetchall()[0][0]
+           db.execute('''SELECT MAX(issue_id) FROM issues''')
+           issue_id = db.fetchall()[0][0]
            try:
                 response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
                 db.execute('''UPDATE issues SET customer_message_start = %s WHERE issue_id = %s''',[response.text,issue_id])
@@ -926,19 +926,26 @@ def payment_add(user_id):
         current_time = datetime.datetime.now().replace(microsecond = 0)
         due_amount = int(request.form['due_amount'])
         paid_amount = int(request.form['paid_amount'])
+        discount_amount = int(request.form['discount_amount'])
+
+        total_amount = paid_amount + discount_amount
         mode = request.form['mode']
-        paid_intervals = int(paid_amount / user[6])
+        paid_intervals = int(total_amount / user[6])
         pending_intervals = user[4] - paid_intervals
 
-        billing_date = datetime.datetime.strptime(user[3],"%Y-%m-%d").date()
+        billing_date = user[3]
         due_date = next_due_date(user[5],billing_date,paid_intervals)
 
-        db.execute('''UPDATE balance_info SET paid_amount = paid_amount + ?, due_amount = due_amount - ?, due_start_date = %s,last_paid_date = %s
+        db.execute('''UPDATE balance_info
+        SET paid_amount = paid_amount + %s,
+        due_amount = due_amount - %s, due_start_date = %s,last_paid_date = %s
                 WHERE user_id = %s''',
-                   [paid_amount, paid_amount, due_date, current_time.date(),user_id])
+                   [paid_amount, total_amount, due_date, current_time.date(),user_id])
+        conn.commit()
         #Message API
         message="We have received your payment of " + str(paid_amount) + "You have paid to our collection executive "+current_user.username +"--Team KRP Broadband"
-        mobile= db.execute('''SELECT mobile FROM User_data user where id = %s''',[user_id]).fetchall()[0][0]
+        db.execute('''SELECT mobile FROM User_data user where id = %s''',[user_id])
+        mobile= db.fetchall()[0][0]
         querystring = {
             "APIKey":apikey,
             "senderid":senderid,
@@ -954,17 +961,17 @@ def payment_add(user_id):
            }
         try:
             response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
-            db.execute('''INSERT INTO transactions(user_id,amount,payment_type,salesman,billno,timestamp,payment_receipt_message)
-        VALUES(?,%s, %s, %s, %s,%s,%s)
-        ''',[user_id,paid_amount,mode,current_user.username,request.form['billno'],current_time,response.text])
+            db.execute('''INSERT INTO transactions(user_id,amount,discount_amount,payment_type,salesman,billno,timestamp,payment_receipt_message)
+        VALUES(%s,%s, %s,%s, %s, %s,%s,%s)
+        ''',[user_id,total_amount,discount_amount,mode,current_user.username,request.form['billno'],current_time,response.text])
             conn.commit()
         except:
             db.execute('''INSERT INTO transactions(user_id,amount,payment_type,salesman,billno,timestamp,payment_receipt_message)
-        VALUES(?,%s, %s, %s, %s,%s,%s)
+        VALUES(%s,%s, %s, %s, %s,%s,%s)
         ''',[user_id,paid_amount,mode,current_user.username,request.form['billno'],current_time,'Message Did not sent'])
             conn.commit()
 
-        db.execute('''UPDATE unsettled_balance SET due_amount = due_amount - ? WHERE user_id = %s''',[paid_amount,user_id])
+        db.execute('''UPDATE unsettled_balance SET due_amount = due_amount - %s WHERE user_id = %s''',[paid_amount,user_id])
         conn.commit()
         return redirect(url_for('home_blueprint.payment'))
     conn.close()
@@ -1000,7 +1007,7 @@ def update_user_profile(user_id):
         else:
             db.execute('''
             INSERT INTO user_history VALUES(
-            ?,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
             )
             ''',[user_id,user_info[1],user_info[2],request.form['mobile'],request.form['status'],request.form['add'],
             'NA',request.form['zone'],user_info[5],request.form['altmobile'],request.form['plan'],request.form['cycle'],current_user.username,current_time,
@@ -1012,21 +1019,21 @@ def update_user_profile(user_id):
                     db.execute('''SELECT * FROM unsettled_balance WHERE user_id = %s''',[user_id])
                     check = db.fetchall()
                     if(len(check) == 0):
-                        db.execute('''INSERT INTO unsettled_balance VALUES(?,%s,1)''',[user_id,due_amount])
+                        db.execute('''INSERT INTO unsettled_balance VALUES(%s,%s,1)''',[user_id,due_amount])
                         conn.commit()
                     else:
-                        db.execute('''UPDATE unsettled_balance SET due_amount = due_amount + ?,no_of_times = no_of_times+1 WHERE user_id = %s''',due_amount,user_id)
+                        db.execute('''UPDATE unsettled_balance SET due_amount = due_amount + %s,no_of_times = no_of_times+1 WHERE user_id = %s''',due_amount,user_id)
                         conn.commit()
 
                 db.execute('''INSERT INTO recent_inactives(user_id,username,inactive_date,updated_portal)
-                VALUES(?,%s,%s,%s)''',[user_id,user_info[1],datetime.datetime.now().date(),0])
+                VALUES(%s,%s,%s,%s)''',[user_id,user_info[1],datetime.datetime.now().date(),0])
                 db.execute('''UPDATE balance_info SET customer_status = "Inactive" WHERE user_id = %s''',[user_id])
                 conn.commit()
 
             if(user_info[4]=='Active' and request.form['status'] == 'Inactive' and user_info[10] == 7):
-                db.execute('''INSERT INTO balance_info VALUES(?,%s,%s,%s,%s,"Inactive",%s,%s)''',[user_id,0,0,None,None,0,0])
+                db.execute('''INSERT INTO balance_info VALUES(%s,%s,%s,%s,%s,"Inactive",%s,%s)''',[user_id,0,0,None,None,0,0])
                 db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-                VALUES(?,%s,%s,"Inactive",%s,%s,%s)''',[user_id,0,0,None,None,0])
+                VALUES(%s,%s,%s,"Inactive",%s,%s,%s)''',[user_id,0,0,None,None,0])
                 conn.commit()
 
             if(user_info[4]=='Inactive' and request.form['status'] == 'Active'):
@@ -1050,12 +1057,12 @@ def update_user_profile(user_id):
                 plan_amount = int(db.fetchall()[0][0])
                 new_amount = plan_amount * amount_calc
 
-                db.execute('''UPDATE balance_info SET due_amount = due_amount + ?,due_start_date = %s,customer_status="Active",
+                db.execute('''UPDATE balance_info SET due_amount = due_amount + %s,due_start_date = %s,customer_status="Active",
                 one_interval_amount = %s,pending_intervals = pending_intervals + 1 WHERE user_id = %s
                 ''',[new_amount,datetime.datetime.now().date(),new_amount,user_id])
                 next_invoice_date = next_due_date(plan_cycle,datetime.datetime.now().date(),1)
                 db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-                VALUES(?,%s,%s,"Active",%s,%s,%s)
+                VALUES(%s,%s,%s,"Active",%s,%s,%s)
                 ''',[user_id,previous_due_amount,new_amount,datetime.datetime.now().date(),next_invoice_date,0])
                 conn.commit()
 
@@ -1083,7 +1090,7 @@ def update_user_profile(user_id):
                 due_amount_total = periods * amount_calc * plan_amount
                 one_period_amount = plan_amount * amount_calc
                 db.execute('''INSERT INTO balance_info(user_id,due_amount,customer_status,due_start_date, pending_intervals,one_interval_amount,paid_amount)
-                VALUES(?,%s,%s,%s,%s,%s,%s)
+                VALUES(%s,%s,%s,%s,%s,%s,%s)
                 ''',[user_id,due_amount_total,"Active",billing_date,periods,one_period_amount,0])
 
                 due_amount = due_amount_total - one_period_amount
@@ -1093,7 +1100,7 @@ def update_user_profile(user_id):
                 next_invoice_date = next_due_date(plan_cycle,invoice_date,1)
 
                 db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-                 VALUES(?,%s,%s,%s,%s,%s,%s)''',[user_id,due_amount,one_period_amount,"Active",invoice_date,next_invoice_date,0])
+                 VALUES(%s,%s,%s,%s,%s,%s,%s)''',[user_id,due_amount,one_period_amount,"Active",invoice_date,next_invoice_date,0])
                 conn.commit()
 
             db.execute('''select price from plans where plan_id = %s''',[int(request.form['plan'])])
@@ -1113,7 +1120,7 @@ def update_user_profile(user_id):
                 if plan_cycle == 5 or plan_cycle == 6 or plan_cycle == 7 or plan_cycle == 0:
                     amount_calc = 0
                 due_amount_total = amount_calc * new_amount
-                db.execute('''UPDATE balance_info SET due_amount = due_amount + ?,pending_intervals = pending_intervals + 1
+                db.execute('''UPDATE balance_info SET due_amount = due_amount + %s,pending_intervals = pending_intervals + 1
                 ,one_interval_amount = %s
                 WHERE user_id = %s
                 ''',[due_amount_total,due_amount_total,user_id])
@@ -1122,7 +1129,7 @@ def update_user_profile(user_id):
                 db.execute('''SELECT due_amount FROM balance_info where user_id = %s''',[user_id])
                 previous_due_amount = int(db.fetchall()[0][0])
                 db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-                 VALUES(?,%s,%s,%s,%s,%s,%s)''',[user_id,previous_due_amount,due_amount_total,"Active",datetime.datetime.now().date(),next_invoice_date,0])
+                 VALUES(%s,%s,%s,%s,%s,%s,%s)''',[user_id,previous_due_amount,due_amount_total,"Active",datetime.datetime.now().date(),next_invoice_date,0])
                  
                 conn.commit()
 
@@ -1205,7 +1212,7 @@ def payment():
             user.zone
             FROM balance_info LEFT JOIN User_data user ON user_id = id
              WHERE due_amount > 0 and customer_status = 'Active'
-             and due_start_date between ? and ?
+             and due_start_date between %s and %s
              order by due_amount desc
              ''',[start_date,end_date])
             output = db.fetchall()
@@ -1223,7 +1230,7 @@ def payment():
              FROM balance_info LEFT JOIN User_data user ON user_id = id
               WHERE due_amount > 0 and customer_status = 'Active'
               and zone = %s
-              and due_start_date between ? and ?
+              and due_start_date between %s and %s
               order by due_amount desc
               ''',[zone,start_date,end_date])
             output = db.fetchall()
@@ -1289,7 +1296,7 @@ def unsettled_amount():
             FROM balance_info LEFT JOIN User_data user ON balance_info.user_id = id
             JOIN unsettled_balance ON balance_info.user_id = unsettled_balance.user_id
              WHERE balance_info.due_amount > 0
-             and due_start_date between ? and ?
+             and due_start_date between %s and %s
              order by due_amount desc
              ''',[start_date,end_date])
             output = db.fetchall()
@@ -1308,7 +1315,7 @@ def unsettled_amount():
              JOIN unsettled_balance ON balance_info.user_id = unsettled_balance.user_id
               WHERE balance_info.due_amount > 0
               and zone = %s
-              and due_start_date between ? and ?
+              and due_start_date between %s and %s
               order by due_amount desc
               ''',[zone,start_date,end_date])
             output = db.fetchall()
@@ -1415,7 +1422,7 @@ def invoice_helper(start_date,end_date):
                          zones.name
                  FROM invoices JOIN User_data user on user_id = user.id
                  JOIN zones ON zones.id= user.zone
-                 AND invoice_date BETWEEN ? AND ?
+                 AND invoice_date BETWEEN %s AND %s
                  ''',[start_date,end_date])
         transactions = db.fetchall()
     return transactions
@@ -1493,7 +1500,7 @@ def invoice():
                          FROM invoices JOIN User_data user on user_id = user.id
                          JOIN zones ON zones.id= user.zone
                          WHERE user.zone = %s
-                         AND invoice_date BETWEEN ? AND ?
+                         AND invoice_date BETWEEN %s AND %s
                          ''',[zone,start_date,end_date])
                 transactions = db.fetchall()
         transactions = invoice_helper(start_date,end_date)
@@ -1522,7 +1529,7 @@ def update_inventory():
 
         if transaction_allowed:
             try:
-                db.execute("INSERT INTO products (name, quantity, used_quanity,available_quantity ) VALUES (?, %s,%s,%s)", (prod_name, quantity,0,quantity))
+                db.execute("INSERT INTO products (name, quantity, used_quanity,available_quantity ) VALUES (%s, %s,%s,%s)", (prod_name, quantity,0,quantity))
                 conn.commit()
             except sql.Error as e:
                 msg = f"An error occurred: {e.args[0]}"
@@ -1565,10 +1572,9 @@ def edit():
         if prod_quantity:
             db.execute("SELECT quantity FROM products WHERE id = %s", (prod_id,))
             old_prod_quantity = db.fetchone()[0]
-            db.execute("UPDATE products SET quantity = %s + ?, available_quantity =  available_quantity + ?"
+            db.execute("UPDATE products SET quantity = %s + %s, available_quantity =  available_quantity + %s"
                            "WHERE id == %s", (prod_quantity, old_prod_quantity, prod_quantity, prod_id))
         conn.commit()
-
         return redirect(url_for('home_blueprint.update_inventory'))
     conn.close()
     return redirect(url_for('home_blueprint.update_inventory'))

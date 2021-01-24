@@ -1,5 +1,10 @@
 {% extends 'layouts/base.html' %}
-{% block stylesheets %}{% endblock stylesheets %}
+{% block stylesheets %}
+<style>
+  table td {width:50px; word-wrap:break-word;}
+</style>
+
+{% endblock stylesheets %}
 {% block content %}
 <div class="header pb-6 d-flex align-items-center">
     <!-- Mask -->
@@ -23,6 +28,7 @@
             <table class="table align-items-center table-flush" styel="word-wrap:break-word"   id = "example" class="display">
               <thead class="thead-light">
                 <tr>
+                  <th scope="col" class="sort" data-sort="name">Assignee</th>
                   <th scope="col" class="sort" data-sort="name">Description</th>
                   <th scope="col" class="sort" data-sort="budget">Raised By</th>
 				  <th scope="col" class="sort" data-sort="budget">Raised On</th>
@@ -33,26 +39,30 @@
               </thead>
               <tbody class="list">
 				  {% for issue in issues %}
+				  {% if current_user.username == issue['assignee_username'] or current_user.username == 'admin' %}
                 <tr>
                   <td class="budget">
-                    {{ issue['description'] }}
+                    {{ issue[6] }}
                   </td>
                   <td class="budget">
-                    {{ issue['raised_by'] }}
+                    {{ issue[1] |safe }}
+                  </td>
+                  <td class="budget">
+                    {{ issue[2] }}
                   </td>
                   <td>
-                    <span class="badge badge-dot mr-4">	
-                      <span class="status">₹{{ issue['created'] }}</span>
+                    <span class="badge badge-dot mr-4">
+                      <span class="status">₹{{ issue[3] }}</span>
                     </span>
                   </td>
                   <td>
                     <div class="d-flex align-items-center">
-                      <span class="completion mr-2">{{ issue['status_name'] }}</span>
+                      <span class="completion mr-2">{{ issue[5] }}</span>
                     </div>
                   </td>
                   <td>
 					  <div class="d-flex align-items-center">
-						<a href="/issues/update/{{ issue['issue_id'] }}" title="Update Payment">Update</a>
+						<a href="/issues/update/{{ issue[0] }}" title="Update Payment">Update</a>
 					  </div>
                   </td>
                   <!-- <td>
@@ -61,6 +71,7 @@
 					  </div>
                   </td> -->
                 </tr>
+                {% endif %}
 				{% endfor %}
               </tbody>
             </table>
@@ -77,7 +88,7 @@
   </div>
 {% endblock content %}
 
-<!-- Specific JS goes HERE --> 
+<!-- Specific JS goes HERE -->
 {% block javascripts %}
 
 	<script>
@@ -106,5 +117,3 @@
 
 
 {% endblock javascripts %}
-
-
