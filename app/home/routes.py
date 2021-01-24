@@ -421,7 +421,7 @@ def raising(user_id):
      reps = db.fetchall()
      db.execute('''
      SELECT username, mobile, email, status, zones.name,user.id,user.name,address
-     FROM user
+     FROM User_data user
      LEFT JOIN zones ON user.zone = zones.id
      WHERE user.id = %s
      ''',[user_id])
@@ -439,7 +439,7 @@ def raising(user_id):
              description = "UserName: " +  str(user_info[0]) + " Customer Name: " + str(user_info[6]) + " Zone: " + str(user_info[4]) + " Mobile: " + str(user_info[1]) + " Address: " + str(user_info[7])
              db.execute('''INSERT INTO issues (
                description, priority, department, raised_by, created, modified,issue_type_id,effected_customer_email,complaint_type,effected_customer,assigned_to)
-               VALUES (?, %s, %s, %s, %s, %s,%s,%s, %s,%s,%s)''',
+               VALUES (%s, %s, %s, %s, %s, %s,%s,%s, %s,%s,%s)''',
                         [description,
                          request.form['priority'],
                          request.form['department'],
@@ -452,7 +452,9 @@ def raising(user_id):
                      user_id,
                      int(request.form['assignee'])
                  ])
-             issue_id = db.execute('''SELECT MAX(issue_id) FROM issues''').fetchall()[0][0]
+             conn.commit()
+             db.execute('''SELECT MAX(issue_id) FROM issues''')
+             issue_id = db.fetchall()[0][0]
              assignee = int(request.form['assignee'])
              conn.commit()
              message="Thank you!! We got your complaint for " + request.form['type'] + ". Our team will reach you soon --Team KRP Broadband"
@@ -479,7 +481,7 @@ def raising(user_id):
                 conn.commit()
 
              message= "Customer Name: "+ user_info[6] + "\nComplaint: " + request.form['type'] + "\nCustomer Address:" + user_info[7] + "\nCustomer Mobile:" + str(user_info[1]) +"\nPlease act fast, make us proud --Team KRP Broadband"
-             db.execute('''SELECT mobile FROM users where id = %s''',[assignee]).fetchall()[0][0]
+             db.execute('''SELECT mobile FROM users where id = %s''',[assignee])
              mobile= str(db.fetchall()[0][0])
              querystring = {
                  "APIKey":apikey,
