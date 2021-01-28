@@ -226,7 +226,7 @@ def users():
                 customers = db.fetchall()
             elif cycle == '':
                 zone = int(zone)
-                db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+                db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM User_data user
                 JOIN zones ON user.zone = zones.id
                 JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
                 WHERE zone = %s
@@ -235,7 +235,7 @@ def users():
                 customers = db.fetchall()
             elif zone == '':
                 cycle = int(cycle)
-                db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+                db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM User_data user
                 JOIN zones ON user.zone = zones.id
                 JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
                 WHERE plan_cycle = %s
@@ -245,7 +245,7 @@ def users():
             else:
                 cycle = int(cycle)
                 zone = int(zone)
-                db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM user
+                db.execute('''SELECT username,email,mobile,status,user.id,zones.name,plan_cycles.name FROM User_data user
                 JOIN zones ON user.zone = zones.id
                 JOIN plan_cycles ON plan_cycles.id = user.plan_cycle
                 WHERE plan_cycle = %s and zone = %s
@@ -1080,7 +1080,6 @@ def update_user_profile(user_id):
                     else:
                         db.execute('''UPDATE unsettled_balance SET due_amount = due_amount + %s,no_of_times = no_of_times+1 WHERE user_id = %s''',due_amount,user_id)
                         conn.commit()
-
                 db.execute('''INSERT INTO recent_inactives(user_id,username,inactive_date,updated_portal)
                 VALUES(%s,%s,%s,%s)''',[user_id,user_info[1],datetime.datetime.now().date(),0])
                 db.execute('''UPDATE balance_info SET customer_status = "Inactive" WHERE user_id = %s''',[user_id])
@@ -1093,7 +1092,6 @@ def update_user_profile(user_id):
                 conn.commit()
 
             if(user_info[4]=='Inactive' and request.form['status'] == 'Active'):
-
                 db.execute('''SELECT due_amount FROM balance_info where user_id = %s''',[user_id])
                 previous_due_amount = int(db.fetchall()[0][0])
                 plan_cycle = int(request.form['cycle'])
