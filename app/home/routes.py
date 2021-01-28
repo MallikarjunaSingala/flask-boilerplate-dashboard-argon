@@ -129,7 +129,7 @@ def index():
       lables.append(d[0])
       values.append(d[1])
     db.execute('''select DATE(timestamp),sum(amount) from transactions
-      WHERE DATE(timestamp) = DATE(now())  group by 1 order by 1''')
+       group by 1 order by 1''')
     data = db.fetchall()
     values2 = []
     lables2 = []
@@ -171,9 +171,9 @@ def index():
       values4.append(d[1])
     conn.close()
     if yesterday_collection[0] == 0:
-        percent_collection = ((today_collection[0]-yesterday_collection[0]))*100
+        percent_collection = round(((today_collection[0]-yesterday_collection[0]))*100,2)
     else:
-        percent_collection = ((today_collection[0]-yesterday_collection[0])/yesterday_collection[0])*100
+        percent_collection = round(((today_collection[0]-yesterday_collection[0])/yesterday_collection[0])*100,2)
     return render_template('index.html', segment='index',
     pending_payments=pending_payments,pending_issues=pending_issues,
     pending_new_requests=pending_new_requests,collection = collection,
@@ -1014,7 +1014,9 @@ def update_user_profile(user_id):
             request.form['sub'],request.form['account'],int(request.form['final_amount'])])
 
             if(user_info[4]=='Active' and request.form['status'] == 'Inactive' and user_info[10] != 7):
-                due_amount = int(db.execute('''SELECT due_amount FROM balance_info WHERE user_id = %s''',[user_id]).fetchall()[0][0])
+                
+                db.execute('''SELECT due_amount FROM balance_info WHERE user_id = %s''',[user_id])
+                due_amount = int(db.fetchall()[0][0])
                 if due_amount != 0 :
                     db.execute('''SELECT * FROM unsettled_balance WHERE user_id = %s''',[user_id])
                     check = db.fetchall()
