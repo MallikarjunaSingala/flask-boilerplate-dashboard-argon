@@ -26,13 +26,14 @@
             <table class="table align-items-center table-flush"  id = "example" class="display">
               <thead class="thead-light">
                 <tr>
-				  <th scope="col" class="sort" data-sort="status">Transaction Date</th>
+				          <th scope="col" class="sort" data-sort="status">Transaction Date</th>
                   <th scope="col" class="sort" data-sort="name">User Name</th>
                   <th scope="col" class="sort" data-sort="budget">Name</th>
                   <th scope="col" class="sort" data-sort="status">Transaction Amount(₹)</th>
                   <th scope="col">SalesMan</th>
                   <th scope="col" class="sort" data-sort="completion">Billno</th>
-				  <th scope="col" class="sort" data-sort="completion">GenerateBill</th>
+                  <th scope="col" class="sort" data-sort="completion">GenerateBill</th>
+                  <th scope="col" class="sort" data-sort="completion">RemoveTransactions</th>
                 </tr>
               </thead>
               <tbody class="list">
@@ -68,6 +69,11 @@
                     <div class="d-flex align-items-center">
 						<a href="/generate_bill/{{ trans[7] }}" title="Generate Invoice">Generate Bill</a>
                     </div>
+                  </td>
+                  <td>
+                    <label style="margin:5px;" class="btn btn-outline-danger btn-toggle toggled-remove">
+                    <input type="radio" id="toggled{{loop.index}}" value="{{trans[7]}}" name="status" hidden> X
+                    </label>
                   </td>
                 </tr>
 				{% endfor %}
@@ -116,7 +122,21 @@
 {% block javascripts %}
 	<script>
 	$(document).ready(function() {
-	    $('#example').DataTable( {
+      $('.toggled-remove').click(function (e){
+          if (!e.target.value) {
+              return;
+          }
+          var trans_id = e.target.value;
+          $.ajax({
+              type: "GET",
+              url: "/removetransaction/" + trans_id,
+              contentType: "application/json",
+          }).done(function (data) {
+              window.location.hash = "#example";
+              window.location.reload(true);
+          });
+      });
+      $('#example').DataTable( {
 	        dom: 'Bfrtip',
 	        buttons: [
 	            'copyHtml5',
@@ -124,9 +144,9 @@
 	            'csvHtml5',
 	            'pdfHtml5'
 	        ]
-	    } );
+      } );
 	} );
-	</script>
+  </script>
 
   <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
   <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>

@@ -75,34 +75,34 @@
 				  {% for issue in issues %}
                 <tr>
                   <td class="budget">
-                    {{ issue['username'] }}
+                    {{ issue[0] }}
                   </td>
                   <td class="budget">
-                    {{ issue['Name'] }}
+                    {{ issue[1] }}
                   </td>
                   <td>
                     <span class="badge badge-dot mr-4">	
-                      <span class="status">{{ issue['due_amount'] }}</span>
+                      <span class="status">{{ issue[2] }}</span>
                     </span>
                   </td>
                   <td>
                     <span class="badge badge-dot mr-4">	
-                      <span class="status">{{ issue['due_start_date'] }}</span>
+                      <span class="status">{{ issue[6] }}</span>
                     </span>
                   </td>
                   <td>
                     <div class="d-flex align-items-center">
-                      <span class="completion mr-2">{{ issue['MobileNumber'] }}</span>
+                      <span class="completion mr-2">{{ issue[3] }}</span>
                     </div>
                   </td>
                   <td>
                     <div class="d-flex align-items-center">
-                      <span class="completion mr-2">{{ issue['Address'] }}</span>
+                      <span class="completion mr-2">{{ issue[4] }}</span>
                     </div>
                   </td>
                   <td>
 					  <div class="d-flex align-items-center">
-						<a href="/payments/add/{{ issue['user_id'] }}" title="Update Payment">Update</a>
+						<a href="/payments/add/{{ issue[5] }}" title="Update Payment">Update</a>
 					  </div>
                   </td>
                 </tr>

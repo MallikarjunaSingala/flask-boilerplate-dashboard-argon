@@ -49,10 +49,10 @@
 										  	<span class="text-success mr-2"><i class="fa fa-arrow-up"></i> {{ percent_collection }}%</span>
 											<span class="text-nowrap">Since last month</span>
 										{% elif percent_collection < 0 %}
-										  	<span class="text-Danger mr-2"><i class="fa fa-arrow-down"></i> {{ percent_collection }}%</span>
+										  	<span class="text-danger mr-2"><i class="fa fa-arrow-down"></i> {{ percent_collection }}%</span>
 											<span class="text-nowrap">Since last month</span>
 										{% else %}
-									  		<span class="text-Secondary mr-2"><i class="fa fa-fat-delete"></i> {{ percent_collection }}%</span>
+									  		<span class="text-secondary mr-2"><i class="fa fa-fat-delete"></i> {{ percent_collection }}%</span>
 											<span class="text-nowrap">Since last month</span>
 										{% endif %}
 										
@@ -269,7 +269,7 @@
 	          data: [
 				  {% for item in values2%}
 				  {{item}},
-					  {% endfor %}
+				{% endfor %}
 	          ]
 	        }
 	      ]

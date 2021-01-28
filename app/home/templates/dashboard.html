@@ -39,7 +39,7 @@
               </thead>
               <tbody class="list">
 				  {% for issue in issues %}
-				  {% if current_user.username == issue['assignee_username'] or current_user.username == 'admin' %}
+				  {% if current_user.username == issue[7] or current_user.username == 'admin' %}
                 <tr>
                   <td class="budget">
                     {{ issue[6] }}
