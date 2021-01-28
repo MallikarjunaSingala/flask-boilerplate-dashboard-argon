@@ -46,6 +46,17 @@ def next_due_date(plan_cycle,last_date,periods):
     if plan_cycle == 4:
         return last_date + relativedelta(years=+periods)
 
+def previous_due_date(plan_cycle,last_date,periods):
+    if plan_cycle == 1:
+        return last_date - relativedelta(months=+periods)
+    if plan_cycle == 2:
+        return last_date - relativedelta(months=+periods*3)
+    if plan_cycle == 3:
+        return last_date - relativedelta(months=+periods*6)
+    if plan_cycle == 4:
+        return last_date - relativedelta(years=+periods)
+    return 0
+
 def calculate_periods(plan_cycle,last_date):
     days = (datetime.date.today()-last_date).days
     if(plan_cycle == 1):
@@ -162,7 +173,7 @@ def index():
       lables3.append(d[0])
       values3.append(d[1])
     db.execute('''select salesman,sum(amount) from transactions
-      WHERE EXTRACT(YEAR_MONTH FROM timestamp) = EXTRACT(YEAR_MONTH FROM now())  group by 1 order by 1''')
+      WHERE DATE(timestamp) = date(now())  group by 1 order by 1''')
     data = db.fetchall()
     values4 = []
     lables4 = []
@@ -259,6 +270,49 @@ def transactions():
         transactions = db.fetchall()
         conn.close()
         return render_template('transactions.html', segment='transactions',transactions = transactions)
+    else:
+        return redirect(url_for('home_blueprint.index'))
+
+@blueprint.route('/removetransaction/<trans_id>', methods=['GET', 'POST'])
+@login_required
+def removetransaction(trans_id):
+    if current_user.department != 2:
+        conn = mysql.connector.connect(**config)
+        db = conn.cursor()
+        db.execute('''
+            SELECT
+                t.amount,
+                t.discount_amount,
+                due_start_date,
+                one_interval_amount,
+                u.plan_cycle,
+                b.user_id
+            FROM transactions t
+            JOIN balance_info b ON t.user_id = b.user_id
+            LEFT JOIN User_data u ON u.id = b.user_id
+            WHERE t.trasaction_id = %s
+         ''',[trans_id])
+        transactions = db.fetchall()[0]
+        plan_cycle = transactions[4]
+        one_interval_amount = transactions[3]
+        amount = transactions[0] + transactions[1]
+        due_start_date = transactions[2]
+        periods = int(amount / one_interval_amount)
+        previous_due_start_date = previous_due_date(plan_cycle,due_start_date,periods)
+        db.execute('''
+        UPDATE balance_info
+        SET due_amount = due_amount + %s,
+        paid_amount = paid_amount - %s,
+        due_start_date = %s
+        WHERE user_id = %s
+        ''',[amount,amount,previous_due_start_date,transactions[5]])
+        conn.commit()
+        db.execute('''
+        DELETE FROM transactions
+        WHERE trasaction_id = %s
+        ''',[trans_id])
+        conn.commit()
+        return redirect(url_for('home_blueprint.transactions'))
     else:
         return redirect(url_for('home_blueprint.index'))
 
