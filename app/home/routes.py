@@ -258,6 +258,77 @@ def users():
     else:
         return redirect(url_for('home_blueprint.index'))
 
+@blueprint.route('/payments/add/<user_id>', methods=['GET', 'POST'])
+@login_required
+def payment_add(user_id):
+  if current_user.department != 2:
+    errors = []
+    conn = mysql.connector.connect(**config)
+    db = conn.cursor()
+    db.execute('''
+    SELECT user_id,due_amount,username,due_start_date,pending_intervals, plan_cycle,one_interval_amount,
+    name,address
+                 FROM balance_info JOIN User_data user ON user_id = id WHERE user_id = %s''',[user_id])
+    user = list(db.fetchall()[0])
+    db.execute('''SELECT * FROM modes''')
+    modes = db.fetchall()
+    if request.method == 'POST':
+        current_time = datetime.datetime.now().replace(microsecond = 0)
+        due_amount = int(request.form['due_amount'])
+        paid_amount = int(request.form['paid_amount'])
+        discount_amount = int(request.form['discount_amount'])
+
+        total_amount = paid_amount + discount_amount
+        mode = request.form['mode']
+        paid_intervals = int(total_amount / user[6])
+        pending_intervals = user[4] - paid_intervals
+
+        billing_date = user[3]
+        due_date = next_due_date(user[5],billing_date,paid_intervals)
+
+        db.execute('''UPDATE balance_info
+        SET paid_amount = paid_amount + %s,
+        due_amount = due_amount - %s, due_start_date = %s,last_paid_date = %s
+                WHERE user_id = %s''',
+                   [paid_amount, total_amount, due_date, current_time.date(),user_id])
+        conn.commit()
+        #Message API
+        message="We have received your payment of " + str(paid_amount) + "You have paid to our collection executive "+current_user.username +"--Team KRP Broadband"
+        db.execute('''SELECT mobile FROM User_data user where id = %s''',[user_id])
+        mobile= db.fetchall()[0][0]
+        querystring = {
+            "APIKey":apikey,
+            "senderid":senderid,
+            "channel":"2",
+            "DCS":"0",
+            "flashsms":"0",
+            "number":mobile,
+            "text":message,
+            "route":"0"}
+        payload = ""
+        headers = {
+           'cache-control': "no-cache",
+           }
+        try:
+            response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
+            db.execute('''INSERT INTO transactions(user_id,amount,discount_amount,payment_type,salesman,billno,timestamp,payment_receipt_message)
+        VALUES(%s,%s, %s,%s, %s, %s,%s,%s)
+        ''',[user_id,total_amount,discount_amount,mode,current_user.username,request.form['billno'],current_time,response.text])
+            conn.commit()
+        except:
+            db.execute('''INSERT INTO transactions(user_id,amount,payment_type,salesman,billno,timestamp,payment_receipt_message)
+        VALUES(%s,%s, %s, %s, %s,%s,%s)
+        ''',[user_id,paid_amount,mode,current_user.username,request.form['billno'],current_time,'Message Did not sent'])
+            conn.commit()
+
+        db.execute('''UPDATE unsettled_balance SET due_amount = due_amount - %s WHERE user_id = %s''',[paid_amount,user_id])
+        conn.commit()
+        return redirect(url_for('home_blueprint.payment'))
+    conn.close()
+    return render_template('add_payment.html', user=user,modes=modes)
+  else:
+      return redirect(url_for('home_blueprint.index'))
+
 @blueprint.route('/transactions', methods=['GET', 'POST'])
 @login_required
 def transactions():
@@ -962,77 +1033,6 @@ def new_requests():
   else:
       return redirect(url_for('home_blueprint.index'))
 
-@blueprint.route('/payments/add/<user_id>', methods=['GET', 'POST'])
-@login_required
-def payment_add(user_id):
-  if current_user.department != 2:
-    errors = []
-    conn = mysql.connector.connect(**config)
-    db = conn.cursor()
-    db.execute('''
-    SELECT user_id,due_amount,username,due_start_date,pending_intervals, plan_cycle,one_interval_amount,
-    name,address
-                 FROM balance_info JOIN User_data user ON user_id = id WHERE user_id = %s''',[user_id])
-    user = list(db.fetchall()[0])
-    db.execute('''SELECT * FROM modes''')
-    modes = db.fetchall()
-    if request.method == 'POST':
-        current_time = datetime.datetime.now().replace(microsecond = 0)
-        due_amount = int(request.form['due_amount'])
-        paid_amount = int(request.form['paid_amount'])
-        discount_amount = int(request.form['discount_amount'])
-
-        total_amount = paid_amount + discount_amount
-        mode = request.form['mode']
-        paid_intervals = int(total_amount / user[6])
-        pending_intervals = user[4] - paid_intervals
-
-        billing_date = user[3]
-        due_date = next_due_date(user[5],billing_date,paid_intervals)
-
-        db.execute('''UPDATE balance_info
-        SET paid_amount = paid_amount + %s,
-        due_amount = due_amount - %s, due_start_date = %s,last_paid_date = %s
-                WHERE user_id = %s''',
-                   [paid_amount, total_amount, due_date, current_time.date(),user_id])
-        conn.commit()
-        #Message API
-        message="We have received your payment of " + str(paid_amount) + "You have paid to our collection executive "+current_user.username +"--Team KRP Broadband"
-        db.execute('''SELECT mobile FROM User_data user where id = %s''',[user_id])
-        mobile= db.fetchall()[0][0]
-        querystring = {
-            "APIKey":apikey,
-            "senderid":senderid,
-            "channel":"2",
-            "DCS":"0",
-            "flashsms":"0",
-            "number":mobile,
-            "text":message,
-            "route":"0"}
-        payload = ""
-        headers = {
-           'cache-control': "no-cache",
-           }
-        try:
-            response = requests.request("POST", url, data=payload, headers=headers, params=querystring)
-            db.execute('''INSERT INTO transactions(user_id,amount,discount_amount,payment_type,salesman,billno,timestamp,payment_receipt_message)
-        VALUES(%s,%s, %s,%s, %s, %s,%s,%s)
-        ''',[user_id,total_amount,discount_amount,mode,current_user.username,request.form['billno'],current_time,response.text])
-            conn.commit()
-        except:
-            db.execute('''INSERT INTO transactions(user_id,amount,payment_type,salesman,billno,timestamp,payment_receipt_message)
-        VALUES(%s,%s, %s, %s, %s,%s,%s)
-        ''',[user_id,paid_amount,mode,current_user.username,request.form['billno'],current_time,'Message Did not sent'])
-            conn.commit()
-
-        db.execute('''UPDATE unsettled_balance SET due_amount = due_amount - %s WHERE user_id = %s''',[paid_amount,user_id])
-        conn.commit()
-        return redirect(url_for('home_blueprint.payment'))
-    conn.close()
-    return render_template('add_payment.html', user=user,modes=modes)
-  else:
-      return redirect(url_for('home_blueprint.index'))
-
 @blueprint.route('/update_user_profile/<user_id>', methods=['GET', 'POST'])
 @login_required
 def update_user_profile(user_id):
@@ -1203,9 +1203,9 @@ def update_user_profile(user_id):
             return redirect(url_for('home_blueprint.users'))
     db.execute('''SELECT * FROM zones''')
     zones = db.fetchall()
-    db.execute('''SELECT * FROM plan_cycles WHERE id IN (1,2,3,4)''')
+    db.execute('''SELECT * FROM plan_cycles''')
     cycles = db.fetchall()
-    db.execute('''SELECT * FROM plans WHERE plan_id IN (1,7,15,16,17)''')
+    db.execute('''SELECT * FROM plans''')
     plans = db.fetchall()
     conn.close()
     return render_template('update_profile.html', user=user_info,cycles=cycles,zones=zones, plans=plans)
@@ -1632,6 +1632,36 @@ def edit():
         return redirect(url_for('home_blueprint.update_inventory'))
     conn.close()
     return redirect(url_for('home_blueprint.update_inventory'))
+
+@blueprint.route('/update_plan_details', methods=['GET', 'POST'])
+@login_required
+def update_plan_details():
+    if current_user.department != 2:
+        conn = mysql.connector.connect(**config)
+        db = conn.cursor()
+        db.execute('''
+        SELECT
+            username,
+            rate_plan,
+            plan_cycle,
+            discount_amount,
+            user.id,
+            plans.plan_name,
+            plan_cycles.name
+        FROM User_data user
+        LEFT JOIN plans ON user.rate_plan = plans.plan_id
+        LEFT JOIN plan_cycles ON user.plan_cycle = plan_cycles.id
+        WHERE status = 'Active'
+        ''')
+        user_info = db.fetchall()
+        db.execute('''SELECT plan_id,plan_name FROM plans''')
+        plans = db.fetchall()
+        db.execute('''SELECT id,name FROM plan_cycles''')
+        plan_cycles = db.fetchall()
+        conn.close()
+        return render_template('change_plan_info.html', segment='ChangePlans',user_info = user_info,plans=plans,plan_cycles=plan_cycles)
+    else:
+        return redirect(url_for('home_blueprint.index'))
 
 @blueprint.route('/<template>')
 @login_required
