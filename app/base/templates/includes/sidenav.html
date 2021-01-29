@@ -73,7 +73,7 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link {% if 'transactions' in segment %} active {% endif %}"
+            <a class="nav-link {% if 'transactions' in segment %} {% endif %}"
                href="{{ url_for('home_blueprint.transactions') }}">
               <i class="ni ni-money-coins text-white"></i>
               <span class="nav-link-text text-white">Transactions</span>

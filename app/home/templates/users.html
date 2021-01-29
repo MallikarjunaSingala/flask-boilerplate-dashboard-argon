@@ -55,6 +55,7 @@
 						<th scope="col" class="sort" data-sort="zone">Plan_Cycle</th>
 	                    <th scope="col">Update</th>
 						<th scope="col">Generate Ledger</th>
+						<th scope="col">Advance Payment</th>
 	                  </tr>
 	                </thead>
 	                <tbody class="list">
@@ -90,6 +91,11 @@
 	                    <td>
 	  					  <div class="d-flex align-items-center">
 	  						<a href="/generate_ledger/{{ user[4] }}" title="Generate Ledger">Generate Ledger</a>
+	  					  </div>
+						</td>
+						<td>
+	  					  <div class="d-flex align-items-center">
+	  						<a href="/payments/add/{{ user[4] }}" title="Advance Payment">Add Advance Payment</a>
 	  					  </div>
 	                    </td>
 	                  </tr>
