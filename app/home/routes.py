@@ -76,8 +76,9 @@ def index():
     conn = mysql.connector.connect(**config)
     db = conn.cursor()
     db.execute('''
-        SELECT SUM(due_amount),COUNT(*) FROM balance_info LEFT JOIN User_data user ON user_id = id WHERE due_amount > 0
+        SELECT SUM(due_amount),COUNT(*) FROM balance_info JOIN User_data user ON user_id = id WHERE due_amount > 0
         AND status = 'Active'
+        AND type != 'D'
         ''')
     pending_payments = db.fetchall()[0]
     db.execute('''
@@ -1234,6 +1235,7 @@ def payment():
     LEFT JOIN User_data user ON user_id = id
     WHERE due_amount > 0
     and customer_status = 'Active'
+    AND type != 'D'
     order by due_amount desc
     ''')
     output = db.fetchall()

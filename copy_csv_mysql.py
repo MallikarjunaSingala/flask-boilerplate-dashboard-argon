@@ -95,6 +95,8 @@ for i, row in users.iterrows():
         rate_plan = 4
     elif '100mbps' in row['Rate_Plan'].lower():
         rate_plan = 5
+    elif '6mbps' in row['Rate_Plan'].lower():
+        rate_plan = 12
     else:
         rate_plan = 1
     zone_id = 0
@@ -116,10 +118,10 @@ for i, row in users.iterrows():
         rate_plan, plan_cycle, sub_status,
         account_status, ip,
         status,discount_amount,actual_amount,
-        creation_date,billing_date)
-     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',[row['Account ID'],row['Email'],row['Phone'],row['Address'],zone_id,
+        creation_date,billing_date,type)
+     VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',[row['Account ID'],row['Email'],row['Phone'],row['Address'],zone_id,
      row['Name'],rate_plan,plan_cycle, row['Subscription Status'],row['Account Status'],row['IP ADDRESS'],
-     row['Account Status'],int(row['Discount']),int(row['Amount']),creation_date,billing_date])
+     row['Account Status'],int(row['Discount']),int(row['Amount']),creation_date,billing_date,row['Type']])
     conn.commit()
     db.execute('''select id from User_data where username = %s''',[row['Account ID']])
     user_id = db.fetchall()[0][0]
@@ -139,7 +141,7 @@ for i, row in users.iterrows():
         amount_calc = 12
     if plan_cycle == 5 or plan_cycle == 6 or plan_cycle == 7 or plan_cycle == 0:
         amount_calc = 0
-    if(row['Account Status'] == 'Inactive'):
+    if(row['Account Status'] == 'Inactive' or row['Account Status']=='Disabled'):
         amount_calc = 0
 
     due_amount_total = periods * amount_calc * int(row['Discount'])

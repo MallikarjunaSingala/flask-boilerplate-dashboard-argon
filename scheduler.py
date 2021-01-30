@@ -49,19 +49,26 @@ def scheduledTask():
     # last_success_date = datetime.datetime.strptime(last_success_date,"%Y-%m-%d").date()
     today = datetime.datetime.now().date()
     
-    db.execute('''SELECT
-         user.id,plan_cycle, rate_plan, next_invoice_date, balance_info.due_amount AS due_amount,discount_amount,
-         pending_intervals,invoices.id
-          FROM User_data user JOIN invoices
-           ON user.id = invoices.user_id
-          JOIN balance_info ON balance_info.user_id = user.id
-          WHERE status = "Active" and invoices.next_invoice_date between %s and %s
-          AND processed != 1
-          ORDER BY next_invoice_date ASC
-          ''',[last_success_date,today])
+    db.execute('''
+    SELECT
+        user.id,
+        plan_cycle,
+        rate_plan,
+        next_invoice_date,
+        balance_info.due_amount AS due_amount,
+        discount_amount,
+        pending_intervals,
+        invoices.id
+    FROM User_data user JOIN invoices
+    ON user.id = invoices.user_id
+    JOIN balance_info ON balance_info.user_id = user.id
+    WHERE status = "Active"
+    AND invoices.next_invoice_date between %s and %s
+    AND processed = 0
+    ORDER BY next_invoice_date ASC
+    ''',[last_success_date,today])
 
     info = db.fetchall()
-
     for i in range(len(info)):
         due_amount = int(info[i][4])
         
@@ -93,4 +100,5 @@ def scheduledTask():
         conn.commit()
     db.execute('''INSERT INTO scheduler_log VALUES(%s,"Success")''',[datetime.date.today()])
     conn.commit()
+    print("Ran")
 scheduledTask()
