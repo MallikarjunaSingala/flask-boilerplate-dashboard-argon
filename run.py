@@ -8,8 +8,6 @@ from os import environ
 from sys import exit
 from decouple import config
 from flask_apscheduler import APScheduler
-import schedule
-import time
 import datetime
 from dateutil.relativedelta import *
 
@@ -74,9 +72,68 @@ def next_due_date(plan_cycle,last_date,periods):
     # return 
         
 def scheduledTask():
-    print("Ran")
+    conn = mysql.connector.connect(**config)
+    db = conn.cursor()
+    
+    db.execute('''SELECT max(last_run_date) FROM scheduler_log where status = "Success"''')
+    last_success_date = db.fetchall()[0][0]
+    # last_success_date = datetime.datetime.strptime(last_success_date,"%Y-%m-%d").date()
+    today = datetime.datetime.now().date()
+    
+    db.execute('''
+    SELECT
+        user.id,
+        plan_cycle,
+        rate_plan,
+        next_invoice_date,
+        balance_info.due_amount AS due_amount,
+        discount_amount,
+        pending_intervals,
+        invoices.id
+    FROM User_data user JOIN invoices
+    ON user.id = invoices.user_id
+    JOIN balance_info ON balance_info.user_id = user.id
+    WHERE status = "Active"
+    AND invoices.next_invoice_date between %s and %s
+    AND processed = 0
+    ORDER BY next_invoice_date ASC
+    ''',[last_success_date,today])
 
-scheduler.add_job(id ='RefreshPayments', func = scheduledTask, trigger = 'interval', seconds=5)
+    info = db.fetchall()
+
+    for i in range(len(info)):
+        due_amount = int(info[i][4])
+        
+        amount_calc = 1
+        plan_cycle = int(info[i][1])
+
+        if plan_cycle == 1:
+            amount_calc = 1
+        if plan_cycle == 2:
+            amount_calc = 3
+        if plan_cycle == 3:
+            amount_calc = 6
+        if plan_cycle == 4:
+            amount_calc = 12
+        
+        db.execute('''UPDATE invoices SET processed = 1 where id = %s''',[int(info[i][7])])
+        current_amount = int(info[i][5]) * amount_calc
+        invoice_date = info[i][3]
+        # datetime.datetime.strptime(info[i][3],"%Y-%m-%d").date()
+        next_invoice_date = next_due_date(plan_cycle,invoice_date,1)
+        db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
+        VALUES(%s,%s,%s,%s,%s,%s,0)
+        ''',[int(info[i][0]),due_amount,current_amount,"Active",invoice_date,next_invoice_date])
+        
+        due_amount = int(info[i][4]) + current_amount
+        intevals = int(info[i][6]) + 1
+        db.execute('''UPDATE balance_info SET due_amount = due_amount + %s, one_interval_amount = %s, pending_intervals = %s WHERE user_id = %s
+        ''',[current_amount,current_amount,intevals,int(info[i][0])])
+        conn.commit()
+    db.execute('''INSERT INTO scheduler_log(last_run_date,status) VALUES(%s,"Success")''',[datetime.date.today()])
+    conn.commit()
+
+scheduler.add_job(id ='Scheduled task', func = scheduledTask, trigger = 'interval', days=1)
 scheduler.start()
 
 if __name__ == "__main__":

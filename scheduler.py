@@ -68,36 +68,35 @@ def scheduledTask():
 
     info = db.fetchall()
 
-    # for i in range(len(info)):
-    #     due_amount = int(info[i][4])
+    for i in range(len(info)):
+        due_amount = int(info[i][4])
         
-    #     amount_calc = 1
-    #     plan_cycle = int(info[i][1])
+        amount_calc = 1
+        plan_cycle = int(info[i][1])
 
-    #     if plan_cycle == 1:
-    #         amount_calc = 1
-    #     if plan_cycle == 2:
-    #         amount_calc = 3
-    #     if plan_cycle == 3:
-    #         amount_calc = 6
-    #     if plan_cycle == 4:
-    #         amount_calc = 12
+        if plan_cycle == 1:
+            amount_calc = 1
+        if plan_cycle == 2:
+            amount_calc = 3
+        if plan_cycle == 3:
+            amount_calc = 6
+        if plan_cycle == 4:
+            amount_calc = 12
         
-    #     db.execute('''UPDATE invoices SET processed = 1 where id = %s''',[int(info[i][7])])
-    #     current_amount = int(info[i][5]) * amount_calc
-    #     invoice_date = info[i][3]
-    #     # datetime.datetime.strptime(info[i][3],"%Y-%m-%d").date()
-    #     next_invoice_date = next_due_date(plan_cycle,invoice_date,1)
-    #     db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
-    #     VALUES(%s,%s,%s,%s,%s,%s,0)
-    #     ''',[int(info[i][0]),due_amount,current_amount,"Active",invoice_date,next_invoice_date])
+        db.execute('''UPDATE invoices SET processed = 1 where id = %s''',[int(info[i][7])])
+        current_amount = int(info[i][5]) * amount_calc
+        invoice_date = info[i][3]
+        # datetime.datetime.strptime(info[i][3],"%Y-%m-%d").date()
+        next_invoice_date = next_due_date(plan_cycle,invoice_date,1)
+        db.execute('''INSERT INTO invoices(user_id,due_amount,current_cycle_amount,user_status,invoice_date,next_invoice_date,processed)
+        VALUES(%s,%s,%s,%s,%s,%s,0)
+        ''',[int(info[i][0]),due_amount,current_amount,"Active",invoice_date,next_invoice_date])
         
-    #     due_amount = int(info[i][4]) + current_amount
-    #     intevals = int(info[i][6]) + 1
-    #     db.execute('''UPDATE balance_info SET due_amount = due_amount + %s, one_interval_amount = %s, pending_intervals = %s WHERE user_id = %s
-    #     ''',[current_amount,current_amount,intevals,int(info[i][0])])
-    #     conn.commit()
-    # db.execute('''INSERT INTO scheduler_log(last_run_date,status) VALUES(%s,"Success")''',[datetime.date.today()])
+        due_amount = int(info[i][4]) + current_amount
+        intevals = int(info[i][6]) + 1
+        db.execute('''UPDATE balance_info SET due_amount = due_amount + %s, one_interval_amount = %s, pending_intervals = %s WHERE user_id = %s
+        ''',[current_amount,current_amount,intevals,int(info[i][0])])
+        conn.commit()
+    db.execute('''INSERT INTO scheduler_log(last_run_date,status) VALUES(%s,"Success")''',[datetime.date.today()])
     conn.commit()
-    print("Ran")
 scheduledTask()
