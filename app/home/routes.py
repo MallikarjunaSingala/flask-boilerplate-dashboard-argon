@@ -148,25 +148,25 @@ def index():
     for d in data:
       lables2.append(d[0])
       values2.append(d[1])
-    db.execute('''SELECT (CASE MONTH(timestamp)
-           WHEN '01' THEN 'Jan'
-           WHEN '02' THEN 'Feb'
-           WHEN '03' THEN 'Mar'
-           WHEN '04' THEN 'Apr'
-           WHEN '05' THEN 'May'
-           WHEN '06' THEN 'Jun'
-           WHEN '07' THEN 'Jul'
-           WHEN '08' THEN 'Aug'
-           WHEN '09' THEN 'Sept'
-           WHEN '10' THEN 'Oct'
-           WHEN '11' THEN 'Nov'
-           WHEN '12' THEN 'Dec'
+    db.execute('''SELECT CONCAT(CASE 
+           WHEN MONTH(timestamp)=1 THEN 'Jan'
+           WHEN MONTH(timestamp)=2 THEN 'Feb'
+           WHEN MONTH(timestamp)=3 THEN 'Mar'
+           WHEN MONTH(timestamp)=4 THEN 'Apr'
+           WHEN MONTH(timestamp)=5 THEN 'May'
+           WHEN MONTH(timestamp)=6 THEN 'Jun'
+           WHEN MONTH(timestamp)=7 THEN 'Jul'
+           WHEN MONTH(timestamp)=8 THEN 'Aug'
+           WHEN MONTH(timestamp)=9 THEN 'Sept'
+           WHEN MONTH(timestamp)=10 THEN 'Oct'
+           WHEN MONTH(timestamp)=11 THEN 'Nov'
+           WHEN MONTH(timestamp)=12 THEN 'Dec'
            ELSE ''
-         END) || '-' || YEAR(timestamp)
-        ,sum(amount)
+         END, '-' , YEAR(timestamp)) as month,
+         SUM(amount)
         FROM   transactions
-        GROUP  BY 1
-        ORDER  BY 1 ''')
+        GROUP BY month
+        ORDER  BY timestamp DESC''')
     data = db.fetchall()
     values3 = []
     lables3 = []
