@@ -15,11 +15,23 @@ def hash_pass( password ):
     pwdhash = binascii.hexlify(pwdhash)
     return (salt + pwdhash) # return bytes
 
-import sqlite3 as sql
-conn = sql.connect('db.sqlite3')
+import mysql.connector
+from mysql.connector.constants import ClientFlag
+
+config = {
+    'user': 'krpcommu_admin',
+    'password': 'Vikram@123',
+    'host': '172.105.56.108',
+    'database': 'krpcommu_fibernet',
+    'use_pure': True
+}
+
+conn = mysql.connector.connect(**config)
 db = conn.cursor()
-password = hash_pass('desk123')
-db.execute('''UPDATE users SET password = ? where username = ?''',[password,suhasini])
+password = hash_pass('0205')
+username = 'rnaik'
+db.execute('''UPDATE users SET password = %s where username = %s''',[password,username])
+conn.commit()
 # db.execute('''INSERT INTO users(username,password,name,department) values(?,?,?,?)''',['suhasini',password,'Suhasini',4])
 # usernames = ['nsanju',
 # 'chinni',
@@ -111,5 +123,3 @@ db.execute('''UPDATE users SET password = ? where username = ?''',[password,suha
 #     password = hash_pass(passwords[i])
 #     db.execute('''INSERT INTO users(username,password,name,mobile) values(?,?,?,?)''',[usernames[i],password,names[i],mobiles[i]])
 # password = hash_pass("pass")
-
-conn.commit()
