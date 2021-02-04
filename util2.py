@@ -28,11 +28,12 @@ config = {
 
 conn = mysql.connector.connect(**config)
 db = conn.cursor()
-password = hash_pass('0205')
-username = 'rnaik'
-db.execute('''UPDATE users SET password = %s where username = %s''',[password,username])
+password = hash_pass('9963239561')
+# username = 'manohar'
+db.execute('''UPDATE users SET password = %s where id = %s''',[password,2])
 conn.commit()
-# db.execute('''INSERT INTO users(username,password,name,department) values(?,?,?,?)''',['suhasini',password,'Suhasini',4])
+# db.execute('''INSERT INTO users(id,username,password,name,department) values(%s,%s,%s,%s,%s)''',[26,username,password,'Manohar Reddy M',4])
+conn.commit()
 # usernames = ['nsanju',
 # 'chinni',
 # 'nagaraju',
