@@ -1037,7 +1037,7 @@ def new_requests():
 @blueprint.route('/update_user_profile/<user_id>', methods=['GET', 'POST'])
 @login_required
 def update_user_profile(user_id):
-  if current_user.department == 3:
+  if current_user.department == 3 or current_user.department == 4:
     errors = []
     conn = mysql.connector.connect(**config)
     db = conn.cursor()
