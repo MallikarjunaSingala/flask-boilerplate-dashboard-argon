@@ -1062,6 +1062,7 @@ def update_user_profile(user_id):
             and request.form['add']==user_info[5]
             and int(request.form['zone'])==user_info[6]
             and request.form['altmobile']==user_info[8]
+            and request.form['name']==user_info[7]
         ):
             return redirect(url_for('home_blueprint.users'))
         else:
@@ -1082,7 +1083,7 @@ def update_user_profile(user_id):
                     %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
                 )
                 ''',[user_id,user_info[1],request.form['email'],request.form['mobile'],user_info[4],request.form['add'],
-                int(request.form['zone']),user_info[7],request.form['altmobile'],current_user.username,current_time])
+                int(request.form['zone']),request.form['name'],request.form['altmobile'],current_user.username,current_time])
             conn.commit()
             db.execute('''
                 UPDATE User_data 
@@ -1091,7 +1092,8 @@ def update_user_profile(user_id):
                     zone= %s,
                     altMobile= %s,
                     modified_timestamp= %s,
-                    modifer= %s
+                    modifer= %s,
+                    name = %s
                 WHERE id = %s
                 ''',[
                 request.form['mobile'],
@@ -1100,7 +1102,9 @@ def update_user_profile(user_id):
                 request.form['altmobile'],
                 current_time,
                 current_user.username,
-                user_id])
+                request.form['name'],
+                user_id
+                ])
             conn.commit()
             return redirect(url_for('home_blueprint.users'))
     db.execute('''SELECT * FROM zones''')

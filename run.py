@@ -133,7 +133,7 @@ def scheduledTask():
     db.execute('''INSERT INTO scheduler_log(last_run_date,status) VALUES(%s,"Success")''',[datetime.date.today()])
     conn.commit()
 
-scheduler.add_job(id ='Scheduled task', func = scheduledTask, trigger = 'interval', days=1)
+scheduler.add_job(id ='Scheduled task', func = scheduledTask, trigger = 'interval', minutes=1440)
 scheduler.start()
 
 if __name__ == "__main__":
